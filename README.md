@@ -92,7 +92,7 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 
 ### 📱 Android (Termux)
 
-One command does everything: installs Ubuntu, XFCE4 desktop, and Hermes.
+One command does everything: installs Debian (lightweight Linux), XFCE4 desktop, and Hermes.
 
 ```sh
 bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)
@@ -102,7 +102,7 @@ After install, Hermes will guide you through setup (API key, model selection, et
 
 - `hermes` - Start Hermes chat
 - `hermes setup` - Configure API key & model
-- `ubuntu` - Enter Ubuntu shell
+- `debian` - Enter Debian shell
 - `startxfce` - Start XFCE4 desktop (needs Termux X11 app)
 
 ### 🍎 iOS (iSH)

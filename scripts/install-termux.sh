@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 #   Hermes-Agent Full Installer for Termux
-#   Sets up Ubuntu + XFCE + Hermes
+#   Sets up Debian + XFCE + Hermes
 #   Usage: bash install-termux.sh
 # ============================================
 
@@ -25,8 +25,8 @@ header() {
     echo -e "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '                                       ' "${C}|${D}"
-    echo -e "  ${C}|${W}  📱 Full Installer v1.0               ${C}|${D}"
-    echo -e "  ${C}|${W}  🤖 Ubuntu + XFCE + Hermes            ${C}|${D}"
+    echo -e "  ${C}|${W}  📱 Full Installer v1.1               ${C}|${D}"
+    echo -e "  ${C}|${W}  🤖 Debian + XFCE + Hermes            ${C}|${D}"
     echo -e "  ${C}+---------------------------------------+${D}"
     echo ""
 }
@@ -73,11 +73,11 @@ echo ""
 echo -e "  ${W}Installing:${D}"
 echo ""
 echo "    1. Termux packages"
-echo "    2. Ubuntu 24.04"
+echo "    2. Debian (lightweight Linux)"
 echo "    3. XFCE4 Desktop"
 echo "    4. Hermes-Agent"
 echo ""
-echo -e "  ${Y}This takes 10-15 minutes.${D}"
+echo -e "  ${Y}This takes 5-10 minutes.${D}"
 echo ""
 echo -e "  ${W}After install, run:${D}"
 echo "    ${C}hermes${D}  to start Hermes"
@@ -106,43 +106,43 @@ pkg install -y git curl wget termux-x11-nightly pulseaudio 2>&1 | tail -5
 ok "Termux packages installed"
 
 # ============================================
-#   STEP 2: Install Ubuntu
+#   STEP 2: Install Debian
 # ============================================
 
-step 2 "Installing Ubuntu 24.04"
+step 2 "Installing Debian"
 
-if proot-distro login ubuntu -- echo "ok" >/dev/null 2>&1; then
-    ok "Ubuntu already installed"
+if proot-distro login debian -- echo "ok" >/dev/null 2>&1; then
+    ok "Debian already installed"
 else
-    log "Downloading Ubuntu 24.04..."
-    proot-distro install ubuntu 2>&1 | tail -10
+    log "Downloading Debian..."
+    proot-distro install debian 2>&1 | tail -10
 
-    if proot-distro login ubuntu -- echo "ok" >/dev/null 2>&1; then
-        ok "Ubuntu installed"
+    if proot-distro login debian -- echo "ok" >/dev/null 2>&1; then
+        ok "Debian installed"
     else
-        fail "Ubuntu installation failed"
+        fail "Debian installation failed"
     fi
 fi
 
 # ============================================
-#   STEP 3: Setup Ubuntu
+#   STEP 3: Setup Debian
 # ============================================
 
-step 3 "Setting up Ubuntu"
+step 3 "Setting up Debian"
 
-log "Updating Ubuntu..."
-proot-distro login ubuntu -- bash -c "apt update && apt upgrade -y" 2>&1 | tail -5
+log "Updating Debian..."
+proot-distro login debian -- bash -c "apt update && apt upgrade -y" 2>&1 | tail -5
 
 log "Installing base tools..."
-proot-distro login ubuntu -- bash -c "apt install -y sudo nano adduser" 2>&1 | tail -3
+proot-distro login debian -- bash -c "apt install -y sudo nano adduser" 2>&1 | tail -3
 
-if proot-distro login ubuntu -- id hermes >/dev/null 2>&1; then
+if proot-distro login debian -- id hermes >/dev/null 2>&1; then
     ok "User 'hermes' exists"
 else
     log "Creating user 'hermes'..."
-    proot-distro login ubuntu -- bash -c "adduser --disabled-password --gecos '' hermes" 2>&1 | tail -3
-    proot-distro login ubuntu -- bash -c "usermod -aG sudo hermes" 2>&1 | tail -3
-    proot-distro login ubuntu -- bash -c "echo 'hermes ALL=(ALL:ALL) ALL' >> /etc/sudoers" 2>&1 | tail -3
+    proot-distro login debian -- bash -c "adduser --disabled-password --gecos '' hermes" 2>&1 | tail -3
+    proot-distro login debian -- bash -c "usermod -aG sudo hermes" 2>&1 | tail -3
+    proot-distro login debian -- bash -c "echo 'hermes ALL=(ALL:ALL) ALL' >> /etc/sudoers" 2>&1 | tail -3
     ok "User 'hermes' created"
 fi
 
@@ -153,10 +153,10 @@ fi
 step 4 "Installing XFCE4 Desktop"
 
 log "Installing XFCE4..."
-proot-distro login ubuntu -- bash -c "apt install -y xfce4 xfce4-goodies dbus-x11" 2>&1 | tail -5
+proot-distro login debian -- bash -c "apt install -y xfce4 xfce4-goodies dbus-x11" 2>&1 | tail -5
 
 log "Cleaning up login managers..."
-proot-distro login ubuntu -- bash -c 'for f in $(find /usr -type f -iname "*login1*"); do rm -rf $f; done' 2>&1 | tail -3
+proot-distro login debian -- bash -c 'for f in $(find /usr -type f -iname "*login1*"); do rm -rf $f; done' 2>&1 | tail -3
 
 ok "XFCE4 installed"
 
@@ -166,7 +166,7 @@ ok "XFCE4 installed"
 
 step 5 "Installing build tools"
 
-proot-distro login ubuntu -- bash -c "apt install -y python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config" 2>&1 | tail -5
+proot-distro login debian -- bash -c "apt install -y python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config" 2>&1 | tail -5
 
 ok "Build tools installed"
 
@@ -177,7 +177,7 @@ ok "Build tools installed"
 step 6 "Installing Hermes-Agent"
 
 log "Running official Hermes installer..."
-proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
+proot-distro login debian -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
 
 ok "Hermes-Agent installed"
 
@@ -191,15 +191,15 @@ mkdir -p "$PREFIX/bin"
 
 cat > "$PREFIX/bin/hermes" << 'HERMES_LAUNCHER'
 #!/bin/sh
-proot-distro login ubuntu -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes $*"
+proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes $*"
 HERMES_LAUNCHER
 chmod +x "$PREFIX/bin/hermes"
 
-cat > "$PREFIX/bin/ubuntu" << 'UBUNTU_LAUNCHER'
+cat > "$PREFIX/bin/debian" << 'DEBIAN_LAUNCHER'
 #!/bin/sh
-proot-distro login ubuntu
-UBUNTU_LAUNCHER
-chmod +x "$PREFIX/bin/ubuntu"
+proot-distro login debian
+DEBIAN_LAUNCHER
+chmod +x "$PREFIX/bin/debian"
 
 cat > "$PREFIX/bin/startxfce" << 'XFCE_LAUNCHER'
 #!/bin/sh
@@ -207,7 +207,7 @@ echo "Starting XFCE4 Desktop..."
 echo "Open Termux X11 app to see the desktop."
 termux-x11 :0 &
 sleep 2
-proot-distro login ubuntu -- bash -c "export DISPLAY=:0; dbus-launch startxfce4"
+proot-distro login debian -- bash -c "export DISPLAY=:0; dbus-launch startxfce4"
 XFCE_LAUNCHER
 chmod +x "$PREFIX/bin/startxfce"
 
@@ -225,7 +225,7 @@ echo -e "  ${W}Commands:${D}"
 echo ""
 echo "    ${C}hermes${D}          ${W}Start Hermes chat${D}"
 echo "    ${C}hermes setup${D}     ${W}Configure API key & model${D}"
-echo "    ${C}ubuntu${D}          ${W}Enter Ubuntu shell${D}"
+echo "    ${C}debian${D}          ${W}Enter Debian shell${D}"
 echo "    ${C}startxfce${D}       ${W}Start XFCE4 desktop${D}"
 echo ""
 echo -e "  ${W}Desktop:${D}"
