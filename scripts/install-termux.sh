@@ -245,8 +245,8 @@ printf "\n"
 printf "  Press Enter when Termux:X11 is open..."
 read -r
 
-# Start X11 with Fluxbox (using -xstartup)
-termux-x11 :1 -xstartup "fluxbox" &
+# Start X11 server (without -xstartup, we'll start fluxbox from Debian)
+termux-x11 :1 &
 sleep 3
 
 # Check if X server is running
@@ -265,6 +265,8 @@ fi
 printf "  \033[1;32mv Connected to X server\033[0m\n"
 printf "\n"
 printf "  Starting Fluxbox in Debian...\n"
+
+# Start Fluxbox from inside Debian (fluxbox is installed there, not in Termux)
 proot-distro login debian --shared-tmp -- bash -c "export DISPLAY=:1; dbus-launch fluxbox"
 FLUXBOX_LAUNCHER
 chmod +x "$PREFIX/bin/startflux"
