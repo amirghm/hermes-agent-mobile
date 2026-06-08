@@ -100,12 +100,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/
 
 After install, Hermes will guide you through setup (API key, model selection, etc.)
 
+**Recommended model:** `xiaomi/mimo-v2.5` (free via OpenRouter)
+
 - `hermes` - Start Hermes chat
 - `hermes setup` - Configure API key & model
 - `debian` - Enter Debian shell
 
 <p align="center">
-  <img src="images/termux-installer-v2.jpg" alt="Termux Installer" width="300">
+  <img src="images/termux-installer-v2.jpg" alt="Termux Installer v2" width="300">
 </p>
 
 ### 🍎 iOS (iSH)
@@ -125,10 +127,6 @@ Add your OpenRouter API key (get one free at https://openrouter.ai):
 ```
 OPENROUTER_API_KEY=sk-or-...
 ```
-
-<p align="center">
-  <img src="images/ish-hermes-running.jpg" alt="Hermes on iSH" width="300">
-</p>
 
 ## Requirements
 
