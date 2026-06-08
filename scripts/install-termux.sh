@@ -130,8 +130,14 @@ log "Updating packages..."
 pkg update -y 2>&1 | tail -3
 pkg upgrade -y 2>&1 | tail -3
 
-log "Installing required packages..."
-pkg install -y proot-distro git curl wget x11-repo termux-x11-nightly pulseaudio 2>&1 | tail -5
+log "Installing x11-repo first..."
+pkg install -y x11-repo 2>&1 | tail -3
+
+log "Installing proot-distro..."
+pkg install -y proot-distro 2>&1 | tail -3
+
+log "Installing remaining packages..."
+pkg install -y git curl wget termux-x11-nightly pulseaudio 2>&1 | tail -5
 
 ok "Termux packages installed"
 
