@@ -14,29 +14,45 @@ C='\033[1;36m'
 W='\033[1;37m'
 D='\033[0m'
 
+download() {
+    if command -v curl >/dev/null 2>&1; then
+        curl -fSL -o "$1" "$2" 2>/dev/null
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -O "$1" "$2" 2>/dev/null
+    else
+        echo "  ${R}x${D} Neither curl nor wget found"
+        exit 1
+    fi
+}
+
 header() {
     clear
     echo ""
-    echo "${C}╔══════════════════════════════════════════╗${D}"
-    echo "${C}║${W}     🤖 Hermes-Agent Installer            ${C}║${D}"
-    echo "${C}║${W}     Your AI assistant on your iPhone    ${C}║${D}"
-    echo "${C}╚══════════════════════════════════════════╝${D}"
+    echo "  ${C}+-------------------------------+${D}"
+    echo "  ${C}|${W}   _                             ${C}|${D}"
+    echo "  ${C}|${W}  | |__   __ _ _ __   __ _ _ __  ${C}|${D}"
+    echo "  ${C}|${W}  | '_ \\ / _\` | '_ \\ / _\` | '_ \\ ${C}|${D}"
+    echo "  ${C}|${W}  | | | | (_| | | | | (_| | | | |${C}|${D}"
+    echo "  ${C}|${W}  |_| |_|\\__,_|_| |_|\\__,_|_| |_|${C}|${D}"
+    echo "  ${C}|${W}                                 ${C}|${D}"
+    echo "  ${C}|${W}  📱 Mobile Installer v0.16.0    ${C}|${D}"
+    echo "  ${C}|${W}  🤖 Hermes-Agent by NousResearch${C}|${D}"
+    echo "  ${C}+-------------------------------+${D}"
     echo ""
 }
 
 step() {
     echo ""
-    echo "${B}━━━ Step $1: $2 ━━━${D}"
+    echo "  ${B}--- Step $1: $2 ---${D}"
     echo ""
 }
 
-ok()   { echo "  ${G}✓${D} $1"; }
+ok()   { echo "  ${G}v${D} $1"; }
 warn() { echo "  ${Y}!${D} $1"; }
 fail() { echo "  ${R}x${D} $1"; exit 1; }
 
 header
 
-# ── Check iSH ──────────────────────────────────────
 if grep -qi 'alpine' /etc/os-release 2>/dev/null; then
     ok "Running in iSH (Alpine Linux)"
 else
@@ -46,13 +62,14 @@ fi
 # ── Step 1: Dependencies ───────────────────────────
 step 1 "Installing dependencies"
 
-echo "  Installing: curl, bash"
+echo "  Installing: curl, wget, bash"
 echo ""
 
 apk update > /dev/null 2>&1 || true
-apk add --no-cache curl bash > /dev/null 2>&1 || true
+apk add --no-cache curl wget bash > /dev/null 2>&1 || true
 
 ok "curl installed"
+ok "wget installed"
 ok "bash installed"
 
 # ── Step 2: Install Hermes ─────────────────────────
@@ -67,7 +84,7 @@ if command -v python3.11 >/dev/null 2>&1; then
 else
     echo "  Downloading Python 3.11 (100MB)..."
     echo "  This takes a minute on mobile data..."
-    curl -fSL -o "$TMPDIR/python311.tar.gz" "$RELEASE/python311-i686.tar.gz"
+    download "$TMPDIR/python311.tar.gz" "$RELEASE/python311-i686.tar.gz" || fail "Download failed"
     cd "$TMPDIR" && tar xzf python311.tar.gz
     cp -rf "$TMPDIR/python311/"* "$HOME/python311/"
     rm -rf "$TMPDIR/python311" "$TMPDIR/python311.tar.gz"
@@ -80,7 +97,7 @@ if python3.11 -c "import hermes_cli" 2>/dev/null; then
     ok "Hermes already installed"
 else
     echo "  Downloading Hermes-Agent (22MB)..."
-    curl -fSL -o "$TMPDIR/hermes.tar.gz" "$RELEASE/hermes-ish-v6.tar.gz"
+    download "$TMPDIR/hermes.tar.gz" "$RELEASE/hermes-ish-v6.tar.gz" || fail "Download failed"
     cd "$TMPDIR" && tar xzf hermes.tar.gz
     SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
     cp -rf "$TMPDIR/usr/"* "$SITE/" 2>/dev/null || true
@@ -93,7 +110,7 @@ if python3.11 -c "import jiter" 2>/dev/null; then
     ok "jiter already installed"
 else
     echo "  Downloading jiter..."
-    curl -fSL -o "$TMPDIR/jiter.tar.gz" "$RELEASE/jiter-i686.tar.gz"
+    download "$TMPDIR/jiter.tar.gz" "$RELEASE/jiter-i686.tar.gz" || fail "Download failed"
     cd "$TMPDIR" && tar xzf jiter.tar.gz
     SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
     for f in "$TMPDIR"/jiter* "$TMPDIR"/_jiter*; do
