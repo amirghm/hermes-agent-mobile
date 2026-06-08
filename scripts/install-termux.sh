@@ -18,28 +18,28 @@ D='\033[0m'
 header() {
     clear
     echo ""
-    echo "  ${C}+---------------------------------------+${D}"
-    echo "  ${C}|${W}" ' _   _                                ' "${C}|${D}"
-    echo "  ${C}|${W}" '| | | | ___ _  _  ___   ___  ___  ' "${C}|${D}"
-    echo "  ${C}|${W}" '| |_| |/ _ \ '\''| '\''_ ` _ \ / _ \/ | ' "${C}|${D}"
-    echo "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
-    echo "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
-    echo "  ${C}|${W}" '                                       ' "${C}|${D}"
-    echo "  ${C}|${W}  📱 Full Installer v0.16.0             ${C}|${D}"
-    echo "  ${C}|${W}  🤖 Ubuntu + XFCE + Hermes            ${C}|${D}"
-    echo "  ${C}+---------------------------------------+${D}"
+    echo -e "  ${C}+---------------------------------------+${D}"
+    echo -e "  ${C}|${W}" ' _   _                                ' "${C}|${D}"
+    echo -e "  ${C}|${W}" '| | | | ___ _  _  ___   ___  ___  ' "${C}|${D}"
+    echo -e "  ${C}|${W}" '| |_| |/ _ \ '\''| '\''_ ` _ \ / _ \/ | ' "${C}|${D}"
+    echo -e "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
+    echo -e "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
+    echo -e "  ${C}|${W}" '                                       ' "${C}|${D}"
+    echo -e "  ${C}|${W}  📱 Full Installer v0.16.0             ${C}|${D}"
+    echo -e "  ${C}|${W}  🤖 Ubuntu + XFCE + Hermes            ${C}|${D}"
+    echo -e "  ${C}+---------------------------------------+${D}"
     echo ""
 }
 
 step() {
     echo ""
-    echo "  ${B}=== Step $1: $2 ===${D}"
+    echo -e "  ${B}=== Step $1: $2 ===${D}"
     echo ""
 }
 
-ok()   { echo "  ${G}v${D} $1"; }
-warn() { echo "  ${Y}!${D} $1"; }
-fail() { echo "  ${R}x${D} $1"; exit 1; }
+ok()   { echo -e "  ${G}v${D} $1"; }
+warn() { echo -e "  ${Y}!${D} $1"; }
+fail() { echo -e "  ${R}x${D} $1"; exit 1; }
 log()  { echo "  $1"; }
 
 # ============================================
@@ -48,9 +48,9 @@ log()  { echo "  $1"; }
 
 if [ -z "$BASH_VERSION" ]; then
     echo ""
-    echo "  ${R}Error: This script must be run with bash, not sh.${D}"
+    echo -e "  ${R}Error: This script must be run with bash, not sh.${D}"
     echo ""
-    echo "  ${W}Use:${D}"
+    echo -e "  ${W}Use:${D}"
     echo ""
     echo "    bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh) YOUR_API_KEY"
     echo ""
@@ -66,22 +66,22 @@ MODEL_NUM="${2:-1}"
 
 if [ -z "$API_KEY" ]; then
     header
-    echo "  ${R}Usage:${D}"
+    echo -e "  ${R}Usage:${D}"
     echo ""
     echo "    bash install-termux.sh YOUR_API_KEY [MODEL_NUMBER]"
     echo ""
-    echo "  ${W}Examples:${D}"
+    echo -e "  ${W}Examples:${D}"
     echo ""
     echo "    bash install-termux.sh ***"
     echo "    bash install-termux.sh *** 2"
     echo ""
-    echo "  ${W}Models:${D}"
+    echo -e "  ${W}Models:${D}"
     echo "    1 = Mimo v2.5 (Free)"
     echo "    2 = Claude Sonnet 4 (approx 3 dollar/1M)"
     echo "    3 = GPT-4o-mini (approx 0.15 dollar/1M)"
     echo "    4 = Gemini Flash (Free tier)"
     echo ""
-    echo "  ${W}Get API key:${D} https://openrouter.ai"
+    echo -e "  ${W}Get API key:${D} https://openrouter.ai"
     echo ""
     exit 1
 fi
@@ -107,7 +107,7 @@ else
 fi
 
 echo ""
-echo "  ${W}Plan:${D}"
+echo -e "  ${W}Plan:${D}"
 echo ""
 echo "    API Key: ***..."
 echo "    Model:   ${MODEL}"
@@ -118,7 +118,7 @@ echo "    2. Ubuntu 24.04"
 echo "    3. XFCE4 Desktop"
 echo "    4. Hermes-Agent"
 echo ""
-echo "  ${Y}This takes 10-15 minutes.${D}"
+echo -e "  ${Y}This takes 10-15 minutes.${D}"
 
 # ============================================
 #   STEP 1: Termux packages
@@ -268,18 +268,18 @@ ok "Launchers created"
 
 header
 
-echo "  ${G}Everything installed!${D}"
+echo -e "  ${G}Everything installed!${D}"
 echo ""
-echo "  ${W}Commands:${D}"
+echo -e "  ${W}Commands:${D}"
 echo ""
 echo "    ${C}hermes${D}          ${W}Start Hermes chat${D}"
 echo "    ${C}ubuntu${D}          ${W}Enter Ubuntu shell${D}"
 echo "    ${C}startxfce${D}       ${W}Start XFCE4 desktop${D}"
 echo ""
-echo "  ${W}Desktop:${D}"
+echo -e "  ${W}Desktop:${D}"
 echo "    1. Install Termux X11 from F-Droid"
 echo "    2. Run ${C}startxfce${D}"
 echo "    3. Open Termux X11 app"
 echo ""
-echo "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}"
+echo -e "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}"
 echo ""
