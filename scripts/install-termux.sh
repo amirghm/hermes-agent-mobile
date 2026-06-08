@@ -64,16 +64,22 @@ fi
 # ── Step 1: Dependencies ───────────────────────────
 step 1 "Installing dependencies"
 
+echo "  Updating all packages first..."
+echo ""
+
+pkg update -y 2>&1 | tail -3
+pkg upgrade -y 2>&1 | tail -3
+
+echo ""
 echo "  Installing: curl, wget, python, git"
 echo ""
 
-pkg update -y > /dev/null 2>&1 || true
-pkg install -y curl wget python git > /dev/null 2>&1 || true
+pkg install -y curl wget python git 2>&1 | tail -5
 
 # Fix broken curl if needed
 if ! curl -s -o /dev/null https://httpbin.org/get 2>/dev/null; then
     warn "curl is broken, reinstalling..."
-    pkg install -y curl --force-reinstall > /dev/null 2>&1 || true
+    pkg install -y curl --force-reinstall 2>&1 | tail -3
 fi
 
 ok "curl installed"
