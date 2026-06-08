@@ -1,7 +1,7 @@
 #!/bin/sh
 # ============================================
 #   Hermes-Agent Installer for Termux
-#   Uses the official Hermes installer
+#   Installs Ubuntu via PRoot, then Hermes on it
 # ============================================
 
 set -e
@@ -30,6 +30,12 @@ header() {
     echo ""
 }
 
+step() {
+    echo ""
+    echo "  ${B}--- Step $1: $2 ---${D}"
+    echo ""
+}
+
 ok()   { echo "  ${G}v${D} $1"; }
 warn() { echo "  ${Y}!${D} $1"; }
 fail() { echo "  ${R}x${D} $1"; exit 1; }
@@ -43,36 +49,81 @@ else
     warn "Does not look like Termux. Might still work."
 fi
 
-# ── Step 1: Update packages ────────────────────────
-echo ""
-echo "  ${B}--- Updating packages ---${D}"
-echo ""
+# ── Step 1: System packages ────────────────────────
+step 1 "Installing Termux dependencies"
 
+echo "  Updating packages..."
 pkg update -y 2>&1 | tail -3
 pkg upgrade -y 2>&1 | tail -3
 
-ok "Packages updated"
+echo ""
+echo "  Installing proot-distro..."
+pkg install -y proot-distro 2>&1 | tail -3
 
-# ── Step 2: Install Hermes ─────────────────────────
+ok "proot-distro installed"
+
+# ── Step 2: Install Ubuntu ─────────────────────────
+step 2 "Installing Ubuntu 24.04"
+
+DISTRO_PATH="$HOME/ubuntu"
+
+if [ -d "$DISTRO_PATH" ]; then
+    ok "Ubuntu already installed"
+else
+    echo "  Downloading Ubuntu 24.04 (Noble)..."
+    echo "  This takes a few minutes..."
+    echo ""
+
+    proot-distro install ubuntu 2>&1 | tail -10
+
+    ok "Ubuntu installed"
+fi
+
+# ── Step 3: Setup Ubuntu ───────────────────────────
+step 3 "Setting up Ubuntu"
+
+echo "  Updating Ubuntu..."
+proot-distro login ubuntu -- bash -c "apt update && apt upgrade -y" 2>&1 | tail -5
+
 echo ""
-echo "  ${B}--- Installing Hermes-Agent ---${D}"
-echo ""
-echo "  This uses the official Hermes installer."
-echo "  It will:"
-echo "    - Install system dependencies"
-echo "    - Clone the repository"
-echo "    - Set up Python environment"
-echo "    - Install all packages"
-echo "    - Run the setup wizard"
-echo ""
-echo "  Get your API key at: https://openrouter.ai"
+echo "  Installing dependencies in Ubuntu..."
+proot-distro login ubuntu -- bash -c "apt install -y python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev" 2>&1 | tail -5
+
+ok "Ubuntu ready"
+
+# ── Step 4: Install Hermes in Ubuntu ───────────────
+step 4 "Installing Hermes-Agent in Ubuntu"
+
+echo "  Running official Hermes installer inside Ubuntu..."
 echo ""
 
-curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash" 2>&1 | tail -20
+
+ok "Hermes-Agent installed"
+
+# ── Step 5: Create launcher ────────────────────────
+step 5 "Creating launcher"
+
+cat > "$PREFIX/bin/hermes" << 'LAUNCHER'
+#!/bin/sh
+exec proot-distro login ubuntu -- bash -c "source ~/.bashrc && hermes $*"
+LAUNCHER
+chmod +x "$PREFIX/bin/hermes"
+
+ok "Launcher created: 'hermes' command available"
 
 # ── Done ───────────────────────────────────────────
+header
+
+echo "  ${G}Installation complete!${D}"
 echo ""
-echo "  ${G}Done!${D}"
+echo "  ${W}Try it now:${D}"
 echo ""
-echo "  ${W}Try:${D} ${C}hermes${D}"
+echo "    ${C}hermes${D}"
+echo ""
+echo "  ${W}Or enter Ubuntu directly:${D}"
+echo ""
+echo "    ${C}proot-distro login ubuntu${D}"
+echo ""
+echo "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}"
 echo ""

@@ -92,21 +92,21 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 
 ### 📱 Android (Termux)
 
-**Option A:** One-liner (official Hermes installer)
-
-```sh
-pkg update -y && pkg upgrade -y && curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-```
-
-**Option B:** Our wrapper script (adds nice UI)
+Installs a full Ubuntu Linux inside Termux, then Hermes on it. This gives you a proper Linux environment with no compatibility issues.
 
 ```sh
 sh <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)
 ```
 
-Both do the same thing. Option A is simpler. Option B has a nicer terminal interface.
+Or manually:
+```sh
+pkg update -y && pkg upgrade -y
+pkg install -y proot-distro
+proot-distro install ubuntu
+proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
+```
 
-Get your API key at: https://openrouter.ai
+After install, just run `hermes` from Termux.
 
 ### 🍎 iOS (iSH)
 
