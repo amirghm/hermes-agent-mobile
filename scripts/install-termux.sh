@@ -14,28 +14,16 @@ C='\033[1;36m'
 W='\033[1;37m'
 D='\033[0m'
 
-# ── Download helper (curl or wget) ────────────────
-download() {
-    if command -v curl >/dev/null 2>&1; then
-        curl -fSL -o "$1" "$2" 2>/dev/null
-    elif command -v wget >/dev/null 2>&1; then
-        wget -q -O "$1" "$2" 2>/dev/null
-    else
-        echo "  ${R}x${D} Neither curl nor wget found"
-        exit 1
-    fi
-}
-
 header() {
     clear
     echo ""
     echo "  ${C}+---------------------------------------+${D}"
-    echo "  ${C}|${W}  _   _                                ${C}|${D}"
-    echo "  ${C}|${W} | | | | ___ _  _  ___   ___  ___  ${C}|${D}"
-    echo "  ${C}|${W} | |_| |/ _ \\ '| '_ \` _ \\ / _ \\/ | ${C}|${D}"
-    echo "  ${C}|${W} |  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}"
-    echo "  ${C}|${W} |_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}"
-    echo "  ${C}|${W}                                       ${C}|${D}"
+    echo "  ${C}|${W}" ' _   _                                ' "${C}|${D}"
+    echo "  ${C}|${W}" '| | | | ___ _  _  ___   ___  ___  ' "${C}|${D}"
+    echo "  ${C}|${W}" '| |_| |/ _ \ '\''| '\''_ ` _ \ / _ \/ | ' "${C}|${D}"
+    echo "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
+    echo "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
+    echo "  ${C}|${W}" '                                       ' "${C}|${D}"
     echo "  ${C}|${W}  📱 Mobile Installer v0.16.0          ${C}|${D}"
     echo "  ${C}|${W}  🤖 by NousResearch                   ${C}|${D}"
     echo "  ${C}+---------------------------------------+${D}"
@@ -64,93 +52,36 @@ fi
 # ── Step 1: Dependencies ───────────────────────────
 step 1 "Installing dependencies"
 
-echo "  Updating all packages first..."
+echo "  Updating packages..."
 echo ""
 
 pkg update -y 2>&1 | tail -3
 pkg upgrade -y 2>&1 | tail -3
 
 echo ""
-echo "  Installing: curl, wget, python, git"
+echo "  Installing: python, git, binutils"
 echo ""
 
-pkg install -y curl wget python git 2>&1 | tail -5
+pkg install -y python git binutils 2>&1 | tail -5
 
-# Fix broken curl if needed
-if ! curl -s -o /dev/null https://httpbin.org/get 2>/dev/null; then
-    warn "curl is broken, reinstalling..."
-    pkg install -y curl --force-reinstall 2>&1 | tail -3
-fi
-
-ok "curl installed"
-ok "wget installed"
 ok "python installed"
 ok "git installed"
 
 # ── Step 2: Install Hermes ─────────────────────────
 step 2 "Installing Hermes-Agent"
 
-RELEASE="https://github.com/amirghm/hermes-agent-mobile/releases/download/v0.16.0"
-TMPDIR="$HOME/tmp/hermes-install-$$"
-mkdir -p "$TMPDIR"
-
-if command -v python3.11 >/dev/null 2>&1; then
-    ok "Python 3.11 already installed"
-else
-    echo "  Downloading Python 3.11 (100MB)..."
-    echo "  This takes a minute on mobile data..."
-    download "$TMPDIR/python311.tar.gz" "$RELEASE/python311-i686.tar.gz" || fail "Download failed"
-    cd "$TMPDIR" && tar xzf python311.tar.gz
-    cp -rf "$TMPDIR/python311/"* "$HOME/python311/"
-    rm -rf "$TMPDIR/python311" "$TMPDIR/python311.tar.gz"
-    ok "Python 3.11 installed"
-fi
-
-export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
-
-if python3.11 -c "import hermes_cli" 2>/dev/null; then
+if python3 -c "import hermes_cli" 2>/dev/null; then
     ok "Hermes already installed"
 else
-    echo "  Downloading Hermes-Agent (22MB)..."
-    download "$TMPDIR/hermes.tar.gz" "$RELEASE/hermes-ish-v6.tar.gz" || fail "Download failed"
-    cd "$TMPDIR" && tar xzf hermes.tar.gz
-    SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
-    cp -rf "$TMPDIR/usr/"* "$SITE/" 2>/dev/null || true
-    rm -f "$SITE/tools/memory_tool.py" 2>/dev/null || true
-    rm -rf "$TMPDIR/hermes.tar.gz" "$TMPDIR/usr"
+    echo "  Installing hermes-agent via pip..."
+    echo "  This takes a few minutes..."
+    echo ""
+    pip install hermes-agent --break-system-packages 2>&1 | tail -5
     ok "Hermes-Agent installed"
 fi
 
-if python3.11 -c "import jiter" 2>/dev/null; then
-    ok "jiter already installed"
-else
-    echo "  Downloading jiter..."
-    download "$TMPDIR/jiter.tar.gz" "$RELEASE/jiter-i686.tar.gz" || fail "Download failed"
-    cd "$TMPDIR" && tar xzf jiter.tar.gz
-    SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
-    for f in "$TMPDIR"/jiter* "$TMPDIR"/_jiter*; do
-        [ -e "$f" ] && cp -rf "$f" "$SITE/" 2>/dev/null
-    done
-    rm -rf "$TMPDIR"/jiter* "$TMPDIR"/_jiter*
-    ok "jiter installed"
-fi
-
-rm -rf "$TMPDIR"
-
-# ── Step 3: PATH ───────────────────────────────────
-step 3 "Setting up PATH"
-
-if ! grep -q 'python311/bin' ~/.bashrc 2>/dev/null; then
-    echo 'export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"' >> ~/.bashrc
-    ok "PATH added to .bashrc"
-else
-    ok "PATH already configured"
-fi
-
-export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
-
-# ── Step 4: Hermes Setup Wizard ────────────────────
-step 4 "Running Hermes setup wizard"
+# ── Step 3: Hermes Setup Wizard ────────────────────
+step 3 "Running Hermes setup wizard"
 
 echo "  This will ask you for:"
 echo "    - API key (get one free at https://openrouter.ai)"
