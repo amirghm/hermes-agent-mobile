@@ -60,7 +60,7 @@ ok "git installed"
 step 2 "Installing Hermes-Agent"
 
 RELEASE="https://github.com/amirghm/hermes-agent-mobile/releases/download/v0.16.0"
-TMPDIR="/tmp/hermes-install-$$"
+TMPDIR="$HOME/tmp/hermes-install-$$"
 mkdir -p "$TMPDIR"
 
 if command -v python3.11 >/dev/null 2>&1; then
