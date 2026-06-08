@@ -92,21 +92,18 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 
 ### 📱 Android (Termux)
 
-Installs a full Ubuntu Linux inside Termux, then Hermes on it. This gives you a proper Linux environment with no compatibility issues.
+One command does everything: installs Ubuntu, XFCE4 desktop, and Hermes.
 
 ```sh
 sh <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)
 ```
 
-Or manually:
-```sh
-pkg update -y && pkg upgrade -y
-pkg install -y proot-distro
-proot-distro install ubuntu
-proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
-```
+It only asks for your API key and model choice. Everything else is automatic.
 
-After install, just run `hermes` from Termux.
+After install:
+- `hermes` - Start Hermes chat
+- `ubuntu` - Enter Ubuntu shell
+- `startxfce` - Start XFCE4 desktop (needs Termux X11 app)
 
 ### 🍎 iOS (iSH)
 
