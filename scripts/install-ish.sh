@@ -6,22 +6,13 @@
 
 set -e
 
-# Use printf for colors (echo -e doesn't work in ash)
-R='\033[1;31m'
-G='\033[1;32m'
-Y='\033[1;33m'
-B='\033[1;34m'
-C='\033[1;36m'
-W='\033[1;37m'
-D='\033[0m'
-
 download() {
     if command -v curl >/dev/null 2>&1; then
         curl -fSL -o "$1" "$2" 2>/dev/null
     elif command -v wget >/dev/null 2>&1; then
         wget -q -O "$1" "$2" 2>/dev/null
     else
-        printf "  ${R}x${D} Neither curl nor wget found\n"
+        printf "  x Neither curl nor wget found\n"
         exit 1
     fi
 }
@@ -29,29 +20,29 @@ download() {
 header() {
     clear
     printf "\n"
-    printf "  ${C}+---------------------------------------+${D}\n"
-    printf "  ${C}|${W} _   _                                ${C}|${D}\n"
-    printf "  ${C}|${W}|| | | | ___ _ __ _ __ ___   ___  ___  ${C}|${D}\n"
-    printf "  ${C}|${W}|| |_| |/ _ \\ '__| '_ \` _ \\ / _ \\/ __| ${C}|${D}\n"
-    printf "  ${C}|${W}||  _  |  __/ |  | | | | | |  __/\\__ \\ ${C}|${D}\n"
-    printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
-    printf "  ${C}|${W}                                       ${C}|${D}\n"
-    printf "  ${C}|${W}  Mobile Installer v0.16.0             ${C}|${D}\n"
-    printf "  ${C}|${W}  by NousResearch                      ${C}|${D}\n"
-    printf "  ${C}|${W}  wrote by @amirghm                    ${C}|${D}\n"
-    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "  +---------------------------------------+\n"
+    printf "  | _   _                                |\n"
+    printf "  || | | | ___ _ __ _ __ ___   ___  ___  |\n"
+    printf "  || |_| |/ _ \\ '__| '_ \` _ \\ / _ \\/ __| |\n"
+    printf "  ||  _  |  __/ |  | | | | | |  __/\\__ \\ |\n"
+    printf "  ||_| |_|\\___|_|  |_| |_| |_\\___||___/ |\n"
+    printf "  |                                       |\n"
+    printf "  |  Mobile Installer v0.16.0             |\n"
+    printf "  |  by NousResearch                      |\n"
+    printf "  |  wrote by @amirghm                    |\n"
+    printf "  +---------------------------------------+\n"
     printf "\n"
 }
 
 step() {
     printf "\n"
-    printf "  ${B}--- Step $1: $2 ---${D}\n"
+    printf "  --- Step $1: $2 ---\n"
     printf "\n"
 }
 
-ok()   { printf "  ${G}v${D} $1\n"; }
-warn() { printf "  ${Y}!${D} $1\n"; }
-fail() { printf "  ${R}x${D} $1\n"; exit 1; }
+ok()   { printf "  [ok] $1\n"; }
+warn() { printf "  [!] $1\n"; }
+fail() { printf "  [x] $1\n"; exit 1; }
 
 header
 
@@ -139,20 +130,20 @@ export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
 # Done
 header
 
-printf "  ${G}Installation complete!${D}\n"
+printf "  Installation complete!\n"
 printf "\n"
-printf "  ${W}Try it now:${D}\n"
+printf "  Try it now:\n"
 printf "\n"
-printf "    ${C}hermes-agent --prompt Hello${D}\n"
+printf "    hermes-agent --prompt Hello\n"
 printf "\n"
-printf "  ${W}Or start a chat:${D}\n"
+printf "  Or start a chat:\n"
 printf "\n"
-printf "    ${C}hermes-agent${D}\n"
+printf "    hermes-agent\n"
 printf "\n"
-printf "  ${W}Configure:${D}\n"
+printf "  Configure:\n"
 printf "\n"
-printf "    ${C}nano ~/.hermes/.env${D}       ${W}(API key)${D}\n"
-printf "    ${C}nano ~/.hermes/config.yaml${D}  ${W}(model)${D}\n"
+printf "    nano ~/.hermes/.env        (API key)\n"
+printf "    nano ~/.hermes/config.yaml  (model)\n"
 printf "\n"
-printf "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}\n"
+printf "  Docs: https://hermes-agent.nousresearch.com\n"
 printf "\n"
