@@ -1,0 +1,7 @@
+model:
+  default: xiaomi/mimo-v2.5
+  provider: openrouter
+  base_url: https://openrouter.ai/api/v1
+  api_mode: chat_completions
+agent:
+  max_turns: 10

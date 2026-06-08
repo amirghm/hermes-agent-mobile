@@ -1,0 +1,27 @@
+name: Build hermes-agent for iSH
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  build-ish:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-docker-action@v4
+      - name: Build
+        run: docker build --platform linux/386 -t hermes-ish-builder .
+      - name: Package
+        run: |
+          mkdir -p output
+          docker run --rm --platform linux/386 -v $(pwd)/output:/output hermes-ish-builder sh -c '
+            SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
+            cd "$SITE"
+            tar -czhf /output/hermes-ish.tar.gz --exclude="__pycache__" --exclude="*.dist-info" --exclude="*.egg-info" --exclude="pip" --exclude="setuptools" --exclude="_vendor" .
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hermes-ish-i686
+          path: output/hermes-ish.tar.gz
