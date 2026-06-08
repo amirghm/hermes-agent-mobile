@@ -59,29 +59,27 @@ pkg update -y 2>&1 | tail -3
 pkg upgrade -y 2>&1 | tail -3
 
 echo ""
-echo "  Installing: python, git, binutils"
+echo "  Installing: python, git"
 echo ""
 
-pkg install -y python git binutils 2>&1 | tail -5
+pkg install -y python git 2>&1 | tail -5
 
 ok "python installed"
 ok "git installed"
 
-# ── Step 2: Install Hermes ─────────────────────────
+# ── Step 2: Install Hermes (official method) ───────
 step 2 "Installing Hermes-Agent"
 
-if python3 -c "import hermes_cli" 2>/dev/null; then
-    ok "Hermes already installed"
-else
-    echo "  Installing hermes-agent via pip..."
-    echo "  This takes a few minutes..."
-    echo ""
-    pip install hermes-agent --break-system-packages 2>&1 | tail -5
-    ok "Hermes-Agent installed"
-fi
+echo "  Using official Hermes installer..."
+echo "  This uses venv + pip (Termux compatible)..."
+echo ""
 
-# ── Step 3: Hermes Setup Wizard ────────────────────
-step 3 "Running Hermes setup wizard"
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup
+
+ok "Hermes-Agent installed"
+
+# ── Step 3: Setup ──────────────────────────────────
+step 3 "Running Hermes setup"
 
 echo "  This will ask you for:"
 echo "    - API key (get one free at https://openrouter.ai)"
