@@ -228,10 +228,6 @@ if ! command -v termux-x11 &> /dev/null; then
     printf "  Download and install the APK:\n"
     printf "    \033[1;36mhttps://github.com/termux/termux-x11/releases/tag/nightly\033[0m\n"
     printf "\n"
-    printf "  Get one of these:\n"
-    printf "    - termux-x11-arm64-v8a-debug.apk\n"
-    printf "    - termux-x11-universal-debug.apk\n"
-    printf "\n"
     exit 1
 fi
 
@@ -245,37 +241,53 @@ printf "\n"
 printf "  Press Enter when Termux:X11 is open..."
 read -r
 
-# Start X11 server (without -xstartup, we'll start fluxbox from Debian)
+# Kill any existing X server
+pkill -f "termux-x11" 2>/dev/null || true
+sleep 1
+
+# Start X11 server
 termux-x11 :1 &
+XPID=$!
 sleep 3
 
-# Check if X server is running
-if ! termux-x11 :1 -ls &> /dev/null; then
-    printf "\n"
-    printf "  \033[1;31mx Could not connect to X server!\033[0m\n"
-    printf "\n"
-    printf "  Make sure:\n"
-    printf "    1. Termux:X11 app is OPEN\n"
-    printf "    2. You see a black screen in the app\n"
-    printf "    3. Try closing and reopening Termux:X11\n"
-    printf "\n"
+# Check if X server started
+if ! kill -0 $XPID 2>/dev/null; then
+    printf "  \033[1;31mx X server failed to start!\033[0m\n"
     exit 1
 fi
 
-printf "  \033[1;32mv Connected to X server\033[0m\n"
-printf "\n"
-printf "  Starting Fluxbox in Debian...\n"
+printf "  \033[1;32mv X server running\033[0m\n"
 
-# Check if fluxbox is installed in Debian
-if ! proot-distro login debian --shared-tmp -- bash -c "command -v fluxbox" >/dev/null 2>&1; then
-    printf "  \033[1;31mx Fluxbox not found in Debian!\033[0m\n"
+# First, make sure fluxbox is installed
+printf "  Checking fluxbox...\n"
+proot-distro login debian -- bash -c "dpkg -l | grep fluxbox" >/dev/null 2>&1 || {
     printf "  \033[1;33mInstalling fluxbox...\033[0m\n"
-    proot-distro login debian --shared-tmp -- bash -c "apt install -y fluxbox" 2>&1 | tail -5
-fi
+    proot-distro login debian -- bash -c "apt update && apt install -y fluxbox" 2>&1 | tail -3
+}
 
-# Start Fluxbox from inside Debian (fluxbox is installed there, not in Termux)
-# Use full path to avoid PATH issues
-proot-distro login debian --shared-tmp -- bash -c "export DISPLAY=:1; export PATH=/usr/bin:/usr/sbin:/bin:/sbin:\$PATH; dbus-launch /usr/bin/fluxbox"
+# Start fluxbox from Debian
+printf "  Starting Fluxbox...\n"
+export TMPDIR=/tmp
+proot-distro login debian -- bash -c "export DISPLAY=:1; dbus-launch fluxbox" &
+DEBPID=$!
+
+# Wait a bit and check
+sleep 3
+if kill -0 $DEBPID 2>/dev/null; then
+    printf "  \033[1;32mv Fluxbox running!\033[0m\n"
+    printf "\n"
+    printf "  Open Termux:X11 app to see the desktop.\n"
+    printf "  Press Ctrl+C to stop.\n"
+    wait $DEBPID
+else
+    printf "  \033[1;31mx Fluxbox failed to start!\033[0m\n"
+    printf "\n"
+    printf "  Try running manually:\n"
+    printf "    proot-distro login debian\n"
+    printf "    export DISPLAY=:1\n"
+    printf "    fluxbox\n"
+    exit 1
+fi
 FLUXBOX_LAUNCHER
 chmod +x "$PREFIX/bin/startflux"
 
