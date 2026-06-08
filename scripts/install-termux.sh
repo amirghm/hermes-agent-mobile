@@ -26,7 +26,7 @@ header() {
     printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
     printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
     printf "  ${C}|${W}                                       ${C}|${D}\n"
-    printf "  ${C}|${W}  📱 Full Installer v1.5               ${C}|${D}\n"
+    printf "  ${C}|${W}  📱 Full Installer v1.6               ${C}|${D}\n"
     printf "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
@@ -39,6 +39,7 @@ step() {
 }
 
 ok()   { printf "  ${G}v${D} $1\n"; }
+skip() { printf "  ${Y}~${D} $1 (already installed)\n"; }
 warn() { printf "  ${Y}!${D} $1\n"; }
 fail() { printf "  ${R}x${D} $1\n"; exit 1; }
 log()  { printf "  $1\n"; }
@@ -70,15 +71,33 @@ else
     warn "Does not look like Termux. Might still work."
 fi
 
+# Check what's already installed
+DEBIAN_INSTALLED=false
+HERMES_INSTALLED=false
+
+if proot-distro login debian -- echo "ok" >/dev/null 2>&1; then
+    DEBIAN_INSTALLED=true
+fi
+
+if proot-distro login debian -- bash -c "command -v hermes" >/dev/null 2>&1; then
+    HERMES_INSTALLED=true
+fi
+
+# Show what will be installed
 printf "\n"
-printf "  ${W}Installing:${D}\n"
+printf "  ${W}Checking status:${D}\n"
 printf "\n"
-printf "    1. Termux packages\n"
-printf "    2. Debian (lightweight Linux)\n"
-printf "    3. Fluxbox (lightweight window manager)\n"
-printf "    4. Hermes-Agent\n"
-printf "\n"
-printf "  ${Y}This takes 5-10 minutes.${D}\n"
+if [ "$DEBIAN_INSTALLED" = true ]; then
+    skip "Debian"
+else
+    printf "    ${C}Debian${D} ${W}will be installed${D}\n"
+fi
+
+if [ "$HERMES_INSTALLED" = true ]; then
+    skip "Hermes-Agent"
+else
+    printf "    ${C}Hermes-Agent${D} ${W}will be installed${D}\n"
+fi
 printf "\n"
 
 # ============================================
@@ -108,8 +127,8 @@ ok "Termux packages installed"
 
 step 2 "Installing Debian"
 
-if proot-distro login debian -- echo "ok" >/dev/null 2>&1; then
-    ok "Debian already installed"
+if [ "$DEBIAN_INSTALLED" = true ]; then
+    skip "Debian already installed"
 else
     log "Downloading Debian..."
     proot-distro install debian 2>&1 | tail -10
@@ -165,15 +184,18 @@ proot-distro login debian -- bash -c "apt install -y python3 python3-pip python3
 ok "Build tools installed"
 
 # ============================================
-#   STEP 6: Install Hermes (skip setup)
+#   STEP 6: Install Hermes
 # ============================================
 
 step 6 "Installing Hermes-Agent"
 
-log "Running official Hermes installer..."
-proot-distro login debian -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
-
-ok "Hermes-Agent installed"
+if [ "$HERMES_INSTALLED" = true ]; then
+    skip "Hermes already installed"
+else
+    log "Running official Hermes installer..."
+    proot-distro login debian -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
+    ok "Hermes installed"
+fi
 
 # ============================================
 #   STEP 7: Create launchers
@@ -250,14 +272,26 @@ chmod +x "$PREFIX/bin/startflux"
 ok "Launchers created"
 
 # ============================================
-#   STEP 8: Run Hermes Setup
+#   STEP 8: Configure Hermes (if not configured)
 # ============================================
 
 step 8 "Configuring Hermes"
 
-printf "  ${W}Now let's configure Hermes (API key, model, etc.)${D}\n"
-printf "\n"
-proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
+# Check if already configured
+HERMES_CONFIGURED=false
+if proot-distro login debian -- bash -c "test -f ~/.hermes/.env" 2>/dev/null; then
+    if proot-distro login debian -- bash -c "grep -q OPENROUTER_API_KEY ~/.hermes/.env" 2>/dev/null; then
+        HERMES_CONFIGURED=true
+    fi
+fi
+
+if [ "$HERMES_CONFIGURED" = true ]; then
+    skip "Hermes already configured"
+else
+    printf "  ${W}Setting up Hermes (API key, model, etc.)${D}\n"
+    printf "\n"
+    proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
+fi
 
 # ============================================
 #   DONE
