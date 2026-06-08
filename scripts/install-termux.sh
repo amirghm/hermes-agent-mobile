@@ -26,7 +26,7 @@ header() {
     printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
     printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
     printf "  ${C}|${W}                                       ${C}|${D}\n"
-    printf "  ${C}|${W}  📱 Full Installer v1.6               ${C}|${D}\n"
+    printf "  ${C}|${W}  📱 Full Installer v1.7               ${C}|${D}\n"
     printf "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
@@ -245,12 +245,12 @@ printf "\n"
 printf "  Press Enter when Termux:X11 is open..."
 read -r
 
-# Start X11
-termux-x11 :0 &
+# Start X11 with Fluxbox (using -xstartup)
+termux-x11 :1 -xstartup "fluxbox" &
 sleep 3
 
 # Check if X server is running
-if ! termux-x11 :0 -ls &> /dev/null; then
+if ! termux-x11 :1 -ls &> /dev/null; then
     printf "\n"
     printf "  \033[1;31mx Could not connect to X server!\033[0m\n"
     printf "\n"
@@ -264,8 +264,8 @@ fi
 
 printf "  \033[1;32mv Connected to X server\033[0m\n"
 printf "\n"
-printf "  Starting Fluxbox...\n"
-proot-distro login debian -- bash -c "export DISPLAY=:0; dbus-launch fluxbox"
+printf "  Starting Fluxbox in Debian...\n"
+proot-distro login debian --shared-tmp -- bash -c "export DISPLAY=:1; dbus-launch fluxbox"
 FLUXBOX_LAUNCHER
 chmod +x "$PREFIX/bin/startflux"
 
