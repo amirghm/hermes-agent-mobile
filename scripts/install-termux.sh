@@ -1,7 +1,7 @@
 #!/bin/sh
 # ============================================
 #   Hermes-Agent Installer for Termux
-#   Installs Ubuntu via PRoot, then Hermes on it
+#   Installs Ubuntu via PRoot, then Hermes
 # ============================================
 
 set -e
@@ -42,7 +42,6 @@ fail() { echo "  ${R}x${D} $1"; exit 1; }
 
 header
 
-# ── Check Termux ───────────────────────────────────
 if [ -d "/data/data/com.termux" ]; then
     ok "Running in Termux"
 else
@@ -57,17 +56,15 @@ pkg update -y 2>&1 | tail -3
 pkg upgrade -y 2>&1 | tail -3
 
 echo ""
-echo "  Installing proot-distro..."
-pkg install -y proot-distro 2>&1 | tail -3
+echo "  Installing proot-distro and tools..."
+pkg install -y proot-distro git curl wget 2>&1 | tail -5
 
 ok "proot-distro installed"
 
 # ── Step 2: Install Ubuntu ─────────────────────────
 step 2 "Installing Ubuntu 24.04"
 
-DISTRO_PATH="$HOME/ubuntu"
-
-if [ -d "$DISTRO_PATH" ]; then
+if proot-distro login ubuntu -- echo "ok" >/dev/null 2>&1; then
     ok "Ubuntu already installed"
 else
     echo "  Downloading Ubuntu 24.04 (Noble)..."
@@ -76,7 +73,11 @@ else
 
     proot-distro install ubuntu 2>&1 | tail -10
 
-    ok "Ubuntu installed"
+    if proot-distro login ubuntu -- echo "ok" >/dev/null 2>&1; then
+        ok "Ubuntu installed"
+    else
+        fail "Ubuntu installation failed. Check your internet connection."
+    fi
 fi
 
 # ── Step 3: Setup Ubuntu ───────────────────────────
@@ -86,7 +87,7 @@ echo "  Updating Ubuntu..."
 proot-distro login ubuntu -- bash -c "apt update && apt upgrade -y" 2>&1 | tail -5
 
 echo ""
-echo "  Installing dependencies in Ubuntu..."
+echo "  Installing dependencies..."
 proot-distro login ubuntu -- bash -c "apt install -y python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev" 2>&1 | tail -5
 
 ok "Ubuntu ready"
@@ -94,7 +95,8 @@ ok "Ubuntu ready"
 # ── Step 4: Install Hermes in Ubuntu ───────────────
 step 4 "Installing Hermes-Agent in Ubuntu"
 
-echo "  Running official Hermes installer inside Ubuntu..."
+echo "  Running official Hermes installer..."
+echo "  This takes a few minutes..."
 echo ""
 
 proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash" 2>&1 | tail -20
@@ -104,9 +106,11 @@ ok "Hermes-Agent installed"
 # ── Step 5: Create launcher ────────────────────────
 step 5 "Creating launcher"
 
+mkdir -p "$PREFIX/bin"
+
 cat > "$PREFIX/bin/hermes" << 'LAUNCHER'
 #!/bin/sh
-exec proot-distro login ubuntu -- bash -c "source ~/.bashrc && hermes $*"
+exec proot-distro login ubuntu -- bash -c "source ~/.bashrc 2>/dev/null; hermes $*"
 LAUNCHER
 chmod +x "$PREFIX/bin/hermes"
 
