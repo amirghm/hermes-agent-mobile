@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 #   Hermes-Agent Full Installer for Termux
-#   Sets up Debian + Fluxbox + Hermes
+#   Sets up Debian + Firefox + Hermes
 #   Usage: bash install-termux.sh
 # ============================================
 
@@ -26,8 +26,8 @@ header() {
     printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
     printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
     printf "  ${C}|${W}                                       ${C}|${D}\n"
-    printf "  ${C}|${W}  📱 Full Installer v1.8               ${C}|${D}\n"
-    printf "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}\n"
+    printf "  ${C}|${W}  📱 Full Installer v2.0               ${C}|${D}\n"
+    printf "  ${C}|${W}  🤖 Debian + Firefox + Hermes          ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
 }
@@ -110,14 +110,11 @@ log "Updating packages..."
 pkg update -y 2>&1 | tail -3
 pkg upgrade -y 2>&1 | tail -3
 
-log "Installing x11-repo first..."
-pkg install -y x11-repo 2>&1 | tail -3
-
 log "Installing proot-distro..."
 pkg install -y proot-distro 2>&1 | tail -3
 
 log "Installing remaining packages..."
-pkg install -y git curl wget termux-x11-nightly pulseaudio 2>&1 | tail -5
+pkg install -y git curl wget 2>&1 | tail -5
 
 ok "Termux packages installed"
 
@@ -163,31 +160,20 @@ else
 fi
 
 # ============================================
-#   STEP 4: Install Fluxbox (lightweight WM)
+#   STEP 4: Install Firefox + build tools
 # ============================================
 
-step 4 "Installing Fluxbox"
+step 4 "Installing Firefox + build tools"
 
-log "Installing Fluxbox + X11..."
-proot-distro login debian -- bash -c "apt install -y fluxbox x11-xserver-utils xterm firefox-esr dbus-x11" 2>&1 | tail -5
+proot-distro login debian -- bash -c "apt install -y firefox-esr python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config" 2>&1 | tail -5
 
-ok "Fluxbox installed"
-
-# ============================================
-#   STEP 5: Install build tools
-# ============================================
-
-step 5 "Installing build tools"
-
-proot-distro login debian -- bash -c "apt install -y python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config" 2>&1 | tail -5
-
-ok "Build tools installed"
+ok "Firefox + build tools installed"
 
 # ============================================
-#   STEP 6: Install Hermes
+#   STEP 5: Install Hermes
 # ============================================
 
-step 6 "Installing Hermes-Agent"
+step 5 "Installing Hermes-Agent"
 
 if [ "$HERMES_INSTALLED" = true ]; then
     skip "Hermes already installed"
@@ -198,10 +184,10 @@ else
 fi
 
 # ============================================
-#   STEP 7: Create launchers
+#   STEP 6: Create launchers
 # ============================================
 
-step 7 "Creating launchers"
+step 6 "Creating launchers"
 
 mkdir -p "$PREFIX/bin"
 
@@ -217,39 +203,13 @@ proot-distro login debian
 DEBIAN_LAUNCHER
 chmod +x "$PREFIX/bin/debian"
 
-cat > "$PREFIX/bin/startflux" << 'FLUXBOX_LAUNCHER'
-#!/bin/bash
-# Based on official Termux:X11 example
-
-# Kill any existing X11 processes
-pkill -f "termux.x11" 2>/dev/null || true
-sleep 1
-
-# Enable PulseAudio
-pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1 2>/dev/null
-
-# Prepare termux-x11 session
-export XDG_RUNTIME_DIR=${TMPDIR}
-termux-x11 :0 >/dev/null &
-sleep 3
-
-# Launch Termux X11 app
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-sleep 2
-
-# Login to Debian and start Fluxbox
-printf "  Starting Fluxbox in Debian...\n"
-proot-distro login debian --shared-tmp -- /bin/bash -c "export PULSE_SERVER=127.0.0.1 && export XDG_RUNTIME_DIR=${TMPDIR} && export DISPLAY=:0 && dbus-launch fluxbox"
-FLUXBOX_LAUNCHER
-chmod +x "$PREFIX/bin/startflux"
-
 ok "Launchers created"
 
 # ============================================
-#   STEP 8: Configure Hermes (if not configured)
+#   STEP 7: Configure Hermes (if not configured)
 # ============================================
 
-step 8 "Configuring Hermes"
+step 7 "Configuring Hermes"
 
 # Check if already configured
 HERMES_CONFIGURED=false
@@ -280,7 +240,6 @@ printf "\n"
 printf "    ${C}hermes${D}          ${W}Start Hermes chat${D}\n"
 printf "    ${C}hermes setup${D}     ${W}Configure API key & model${D}\n"
 printf "    ${C}debian${D}          ${W}Enter Debian shell${D}\n"
-printf "    ${C}startflux${D}       ${W}Start Fluxbox desktop${D}\n"
 printf "\n"
 printf "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}\n"
 printf "\n"
