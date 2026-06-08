@@ -20,14 +20,15 @@ header() {
     clear
     printf "\n"
     printf "  ${C}+---------------------------------------+${D}\n"
-    printf "  ${C}|${W} _   _                                ${C}|${D}\n"
-    printf "  ${C}|${W}|| | | | ___ _  _  ___   ___  ___  ${C}|${D}\n"
-    printf "  ${C}|${W}|| |_| |/ _ \\ | '_ \` _ \\ / _ \\/ | ${C}|${D}\n"
-    printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
-    printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
-    printf "  ${C}|${W}                                       ${C}|${D}\n"
+    printf "  ${C}|${W}%s${C}|${D}\n" '  _   _                                '
+    printf "  ${C}|${W}%s${C}|${D}\n" ' | | | | ___ _ __ _ __ ___   ___  ___  '
+    printf "  ${C}|${W}%s${C}|${D}\n" ' | |_| |/ _ '"'"' '"'"'__| '"'"'_ ` _ \ / _ \/ __| '
+    printf "  ${C}|${W}%s${C}|${D}\n" ' |  _  |  __/ |  | | | | | |  __/\__ \ '
+    printf "  ${C}|${W}%s${C}|${D}\n" ' |_| |_|\___|_|  |_| |_| |_|\___||___/ '
+    printf "  ${C}|${W}%s${C}|${D}\n" '                                       '
     printf "  ${C}|${W}  📱 Full Installer v2.0               ${C}|${D}\n"
-    printf "  ${C}|${W}  🤖 Debian + Firefox + Hermes          ${C}|${D}\n"
+    printf "  ${C}|${W}  🤖 Debian + Firefox + Hermes         ${C}|${D}\n"
+    printf "  ${C}|${W}  ✍️ wrote by @amirghm                ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
 }
