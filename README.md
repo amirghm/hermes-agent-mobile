@@ -10,6 +10,12 @@
   <a href="https://github.com/amirghm/hermes-agent-mobile/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
 </p>
 
+<p align="center">
+  <img src="images/installation-1.jpg" alt="Installation 1" width="30%">
+  <img src="images/installation-2.jpg" alt="Installation 2" width="30%">
+  <img src="images/termux-hermes-running.jpg" alt="Hermes Running" width="30%">
+</p>
+
 🤖 **Your AI assistant, right in your pocket.**
 
 Hermes-Agent is a fully featured AI agent framework. This project brings it to Android (Termux) and iOS (iSH), so you get a personal AI that's always with you. No cloud servers, no laptop needed. Just your phone and an API key.
@@ -105,10 +111,6 @@ After install, Hermes will guide you through setup (API key, model selection, et
 - `hermes` - Start Hermes chat
 - `hermes setup` - Configure API key & model
 - `debian` - Enter Debian shell
-
-<p align="center">
-  <img src="images/termux-installer-v2.jpg" alt="Termux Installer v2" width="300">
-</p>
 
 ### 🍎 iOS (iSH)
 
