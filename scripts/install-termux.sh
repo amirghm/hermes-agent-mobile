@@ -25,7 +25,7 @@ header() {
     echo -e "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '                                       ' "${C}|${D}"
-    echo -e "  ${C}|${W}  📱 Full Installer v0.16.0             ${C}|${D}"
+    echo -e "  ${C}|${W}  📱 Full Installer v0.16.1             ${C}|${D}"
     echo -e "  ${C}|${W}  🤖 Ubuntu + XFCE + Hermes            ${C}|${D}"
     echo -e "  ${C}+---------------------------------------+${D}"
     echo ""
