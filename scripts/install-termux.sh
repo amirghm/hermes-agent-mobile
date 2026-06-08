@@ -266,8 +266,16 @@ printf "  \033[1;32mv Connected to X server\033[0m\n"
 printf "\n"
 printf "  Starting Fluxbox in Debian...\n"
 
+# Check if fluxbox is installed in Debian
+if ! proot-distro login debian --shared-tmp -- bash -c "command -v fluxbox" >/dev/null 2>&1; then
+    printf "  \033[1;31mx Fluxbox not found in Debian!\033[0m\n"
+    printf "  \033[1;33mInstalling fluxbox...\033[0m\n"
+    proot-distro login debian --shared-tmp -- bash -c "apt install -y fluxbox" 2>&1 | tail -5
+fi
+
 # Start Fluxbox from inside Debian (fluxbox is installed there, not in Termux)
-proot-distro login debian --shared-tmp -- bash -c "export DISPLAY=:1; dbus-launch fluxbox"
+# Use full path to avoid PATH issues
+proot-distro login debian --shared-tmp -- bash -c "export DISPLAY=:1; export PATH=/usr/bin:/usr/sbin:/bin:/sbin:\$PATH; dbus-launch /usr/bin/fluxbox"
 FLUXBOX_LAUNCHER
 chmod +x "$PREFIX/bin/startflux"
 
