@@ -7,53 +7,54 @@
 
 set -e
 
-R='\033[1;31m'
-G='\033[1;32m'
-Y='\033[1;33m'
-B='\033[1;34m'
-C='\033[1;36m'
-W='\033[1;37m'
-D='\033[0m'
+# ANSI colors using printf format
+R='\e[1;31m'
+G='\e[1;32m'
+Y='\e[1;33m'
+B='\e[1;34m'
+C='\e[1;36m'
+W='\e[1;37m'
+D='\e[0m'
 
 header() {
     clear
-    echo ""
-    echo -e "  ${C}+---------------------------------------+${D}"
-    echo -e "  ${C}|${W}" ' _   _                                ' "${C}|${D}"
-    echo -e "  ${C}|${W}" '| | | | ___ _  _  ___   ___  ___  ' "${C}|${D}"
-    echo -e "  ${C}|${W}" '| |_| |/ _ \ '\''| '\''_ ` _ \ / _ \\/ | ' "${C}|${D}"
-    echo -e "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
-    echo -e "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
-    echo -e "  ${C}|${W}" '                                       ' "${C}|${D}"
-    echo -e "  ${C}|${W}  📱 Full Installer v1.2               ${C}|${D}"
-    echo -e "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}"
-    echo -e "  ${C}+---------------------------------------+${D}"
-    echo ""
+    printf "\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "  ${C}|${W} _   _                                ${C}|${D}\n"
+    printf "  ${C}|${W}|| | | | ___ _  _  ___   ___  ___  ${C}|${D}\n"
+    printf "  ${C}|${W}|| |_| |/ _ \\ | '_ \` _ \\ / _ \\/ | ${C}|${D}\n"
+    printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
+    printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
+    printf "  ${C}|${W}                                       ${C}|${D}\n"
+    printf "  ${C}|${W}  📱 Full Installer v1.3               ${C}|${D}\n"
+    printf "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "\n"
 }
 
 step() {
-    echo ""
-    echo -e "  ${B}=== Step $1: $2 ===${D}"
-    echo ""
+    printf "\n"
+    printf "  ${B}=== Step $1: $2 ===${D}\n"
+    printf "\n"
 }
 
-ok()   { echo -e "  ${G}v${D} $1"; }
-warn() { echo -e "  ${Y}!${D} $1"; }
-fail() { echo -e "  ${R}x${D} $1"; exit 1; }
-log()  { echo "  $1"; }
+ok()   { printf "  ${G}v${D} $1\n"; }
+warn() { printf "  ${Y}!${D} $1\n"; }
+fail() { printf "  ${R}x${D} $1\n"; exit 1; }
+log()  { printf "  $1\n"; }
 
 # ============================================
 #   CHECK: must be run with bash, not sh
 # ============================================
 
 if [ -z "$BASH_VERSION" ]; then
-    echo ""
-    echo -e "  ${R}Error: This script must be run with bash, not sh.${D}"
-    echo ""
-    echo -e "  ${W}Use:${D}"
-    echo ""
-    echo "    bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)"
-    echo ""
+    printf "\n"
+    printf "  ${R}Error: This script must be run with bash, not sh.${D}\n"
+    printf "\n"
+    printf "  ${W}Use:${D}\n"
+    printf "\n"
+    printf "    bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)\n"
+    printf "\n"
     exit 1
 fi
 
@@ -69,20 +70,20 @@ else
     warn "Does not look like Termux. Might still work."
 fi
 
-echo ""
-echo -e "  ${W}Installing:${D}"
-echo ""
-echo "    1. Termux packages"
-echo "    2. Debian (lightweight Linux)"
-echo "    3. Fluxbox (lightweight window manager)"
-echo "    4. Hermes-Agent"
-echo ""
-echo -e "  ${Y}This takes 5-10 minutes.${D}"
-echo ""
-echo -e "  ${W}After install, run:${D}"
-echo "    ${C}hermes${D}  to start Hermes"
-echo "    ${C}hermes setup${D}  to configure API key & model"
-echo ""
+printf "\n"
+printf "  ${W}Installing:${D}\n"
+printf "\n"
+printf "    1. Termux packages\n"
+printf "    2. Debian (lightweight Linux)\n"
+printf "    3. Fluxbox (lightweight window manager)\n"
+printf "    4. Hermes-Agent\n"
+printf "\n"
+printf "  ${Y}This takes 5-10 minutes.${D}\n"
+printf "\n"
+printf "  ${W}After install, run:${D}\n"
+printf "    ${C}hermes${D}  to start Hermes\n"
+printf "    ${C}hermes setup${D}  to configure API key & model\n"
+printf "\n"
 
 # ============================================
 #   STEP 1: Termux packages
@@ -200,8 +201,8 @@ chmod +x "$PREFIX/bin/debian"
 
 cat > "$PREFIX/bin/startflux" << 'FLUXBOX_LAUNCHER'
 #!/bin/sh
-echo "Starting Fluxbox Desktop..."
-echo "Open Termux X11 app to see the desktop."
+printf "Starting Fluxbox Desktop...\n"
+printf "Open Termux X11 app to see the desktop.\n"
 termux-x11 :0 &
 sleep 2
 proot-distro login debian -- bash -c "export DISPLAY=:0; dbus-launch fluxbox"
@@ -216,19 +217,19 @@ ok "Launchers created"
 
 header
 
-echo -e "  ${G}Everything installed!${D}"
-echo ""
-echo -e "  ${W}Commands:${D}"
-echo ""
-echo "    ${C}hermes${D}          ${W}Start Hermes chat${D}"
-echo "    ${C}hermes setup${D}     ${W}Configure API key & model${D}"
-echo "    ${C}debian${D}          ${W}Enter Debian shell${D}"
-echo "    ${C}startflux${D}       ${W}Start Fluxbox desktop${D}"
-echo ""
-echo -e "  ${W}Desktop:${D}"
-echo "    1. Install Termux X11 from F-Droid"
-echo "    2. Run ${C}startflux${D}"
-echo "    3. Open Termux X11 app"
-echo ""
-echo -e "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}"
-echo ""
+printf "  ${G}Everything installed!${D}\n"
+printf "\n"
+printf "  ${W}Commands:${D}\n"
+printf "\n"
+printf "    ${C}hermes${D}          ${W}Start Hermes chat${D}\n"
+printf "    ${C}hermes setup${D}     ${W}Configure API key & model${D}\n"
+printf "    ${C}debian${D}          ${W}Enter Debian shell${D}\n"
+printf "    ${C}startflux${D}       ${W}Start Fluxbox desktop${D}\n"
+printf "\n"
+printf "  ${W}Desktop:${D}\n"
+printf "    1. Install Termux X11 from F-Droid\n"
+printf "    2. Run ${C}startflux${D}\n"
+printf "    3. Open Termux X11 app\n"
+printf "\n"
+printf "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}\n"
+printf "\n"
