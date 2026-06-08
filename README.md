@@ -92,11 +92,21 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 
 ### 📱 Android (Termux)
 
+**Option A:** One-liner (official Hermes installer)
+
+```sh
+pkg update -y && pkg upgrade -y && curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+```
+
+**Option B:** Our wrapper script (adds nice UI)
+
 ```sh
 sh <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)
 ```
 
-The installer handles everything. At the end it runs `hermes setup` which asks for your API key and model preference interactively.
+Both do the same thing. Option A is simpler. Option B has a nicer terminal interface.
+
+Get your API key at: https://openrouter.ai
 
 ### 🍎 iOS (iSH)
 
