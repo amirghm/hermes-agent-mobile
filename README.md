@@ -115,7 +115,7 @@ After install, Hermes will guide you through setup (API key, model selection, et
 ### 🍎 iOS (iSH)
 
 ```sh
-sh <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-ish.sh)
+curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-ish.sh -o /tmp/install.sh && sh /tmp/install.sh
 ```
 
 For iSH, configure manually after install:
