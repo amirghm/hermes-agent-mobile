@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 #   Hermes-Agent Full Installer for Termux
-#   Sets up Debian + XFCE + Hermes
+#   Sets up Debian + Fluxbox + Hermes
 #   Usage: bash install-termux.sh
 # ============================================
 
@@ -25,8 +25,8 @@ header() {
     echo -e "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '                                       ' "${C}|${D}"
-    echo -e "  ${C}|${W}  📱 Full Installer v1.1               ${C}|${D}"
-    echo -e "  ${C}|${W}  🤖 Debian + XFCE + Hermes            ${C}|${D}"
+    echo -e "  ${C}|${W}  📱 Full Installer v1.2               ${C}|${D}"
+    echo -e "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}"
     echo -e "  ${C}+---------------------------------------+${D}"
     echo ""
 }
@@ -74,7 +74,7 @@ echo -e "  ${W}Installing:${D}"
 echo ""
 echo "    1. Termux packages"
 echo "    2. Debian (lightweight Linux)"
-echo "    3. XFCE4 Desktop"
+echo "    3. Fluxbox (lightweight window manager)"
 echo "    4. Hermes-Agent"
 echo ""
 echo -e "  ${Y}This takes 5-10 minutes.${D}"
@@ -147,18 +147,15 @@ else
 fi
 
 # ============================================
-#   STEP 4: Install XFCE4 Desktop
+#   STEP 4: Install Fluxbox (lightweight WM)
 # ============================================
 
-step 4 "Installing XFCE4 Desktop"
+step 4 "Installing Fluxbox"
 
-log "Installing XFCE4..."
-proot-distro login debian -- bash -c "apt install -y xfce4 xfce4-goodies dbus-x11" 2>&1 | tail -5
+log "Installing Fluxbox + X11..."
+proot-distro login debian -- bash -c "apt install -y fluxbox x11-xserver-utils xterm firefox-esr dbus-x11" 2>&1 | tail -5
 
-log "Cleaning up login managers..."
-proot-distro login debian -- bash -c 'for f in $(find /usr -type f -iname "*login1*"); do rm -rf $f; done' 2>&1 | tail -3
-
-ok "XFCE4 installed"
+ok "Fluxbox installed"
 
 # ============================================
 #   STEP 5: Install build tools
@@ -201,15 +198,15 @@ proot-distro login debian
 DEBIAN_LAUNCHER
 chmod +x "$PREFIX/bin/debian"
 
-cat > "$PREFIX/bin/startxfce" << 'XFCE_LAUNCHER'
+cat > "$PREFIX/bin/startflux" << 'FLUXBOX_LAUNCHER'
 #!/bin/sh
-echo "Starting XFCE4 Desktop..."
+echo "Starting Fluxbox Desktop..."
 echo "Open Termux X11 app to see the desktop."
 termux-x11 :0 &
 sleep 2
-proot-distro login debian -- bash -c "export DISPLAY=:0; dbus-launch startxfce4"
-XFCE_LAUNCHER
-chmod +x "$PREFIX/bin/startxfce"
+proot-distro login debian -- bash -c "export DISPLAY=:0; dbus-launch fluxbox"
+FLUXBOX_LAUNCHER
+chmod +x "$PREFIX/bin/startflux"
 
 ok "Launchers created"
 
@@ -226,11 +223,11 @@ echo ""
 echo "    ${C}hermes${D}          ${W}Start Hermes chat${D}"
 echo "    ${C}hermes setup${D}     ${W}Configure API key & model${D}"
 echo "    ${C}debian${D}          ${W}Enter Debian shell${D}"
-echo "    ${C}startxfce${D}       ${W}Start XFCE4 desktop${D}"
+echo "    ${C}startflux${D}       ${W}Start Fluxbox desktop${D}"
 echo ""
 echo -e "  ${W}Desktop:${D}"
 echo "    1. Install Termux X11 from F-Droid"
-echo "    2. Run ${C}startxfce${D}"
+echo "    2. Run ${C}startflux${D}"
 echo "    3. Open Termux X11 app"
 echo ""
 echo -e "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}"
