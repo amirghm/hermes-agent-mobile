@@ -26,7 +26,7 @@ header() {
     printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
     printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
     printf "  ${C}|${W}                                       ${C}|${D}\n"
-    printf "  ${C}|${W}  📱 Full Installer v1.3               ${C}|${D}\n"
+    printf "  ${C}|${W}  📱 Full Installer v1.4               ${C}|${D}\n"
     printf "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
@@ -79,10 +79,6 @@ printf "    3. Fluxbox (lightweight window manager)\n"
 printf "    4. Hermes-Agent\n"
 printf "\n"
 printf "  ${Y}This takes 5-10 minutes.${D}\n"
-printf "\n"
-printf "  ${W}After install, run:${D}\n"
-printf "    ${C}hermes${D}  to start Hermes\n"
-printf "    ${C}hermes setup${D}  to configure API key & model\n"
 printf "\n"
 
 # ============================================
@@ -212,24 +208,36 @@ chmod +x "$PREFIX/bin/startflux"
 ok "Launchers created"
 
 # ============================================
+#   STEP 8: Run Hermes Setup
+# ============================================
+
+step 8 "Configuring Hermes"
+
+printf "  ${W}Now let's configure Hermes (API key, model, etc.)${D}\n"
+printf "\n"
+proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
+
+# ============================================
 #   DONE
 # ============================================
 
 header
 
-printf "  ${G}Everything installed!${D}\n"
+printf "  ${G}Everything installed and configured!${D}\n"
 printf "\n"
 printf "  ${W}Commands:${D}\n"
 printf "\n"
 printf "    ${C}hermes${D}          ${W}Start Hermes chat${D}\n"
-printf "    ${C}hermes setup${D}     ${W}Configure API key & model${D}\n"
 printf "    ${C}debian${D}          ${W}Enter Debian shell${D}\n"
-printf "    ${C}startflux${D}       ${W}Start Fluxbox desktop${D}\n"
+printf "    ${C}startflux${D}       ${W}Start Fluxbox desktop (GUI)${D}\n"
 printf "\n"
 printf "  ${W}Desktop:${D}\n"
 printf "    1. Install Termux X11 from F-Droid\n"
 printf "    2. Run ${C}startflux${D}\n"
 printf "    3. Open Termux X11 app\n"
+printf "\n"
+printf "  ${W}Note:${D} Hermes works in terminal too (no GUI needed)\n"
+printf "       Firefox runs headless for web browsing\n"
 printf "\n"
 printf "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}\n"
 printf "\n"
