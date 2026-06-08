@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 # ============================================
 #   Hermes-Agent Full Installer for Termux
 #   Sets up Ubuntu + XFCE + Hermes
-#   Usage: sh install-termux.sh <API_KEY> [MODEL_NUMBER]
+#   Usage: bash install-termux.sh <API_KEY> [MODEL_NUMBER]
 # ============================================
 
 set -e
@@ -40,31 +40,45 @@ step() {
 ok()   { echo "  ${G}v${D} $1"; }
 warn() { echo "  ${Y}!${D} $1"; }
 fail() { echo "  ${R}x${D} $1"; exit 1; }
-
 log()  { echo "  $1"; }
 
 # ============================================
-#   GET INPUT (from arguments, not interactive)
+#   CHECK: must be run with bash, not sh
 # ============================================
 
-API_KEY="${1:-}"
+if [ -z "$BASH_VERSION" ]; then
+    echo ""
+    echo "  ${R}Error: This script must be run with bash, not sh.${D}"
+    echo ""
+    echo "  ${W}Use:${D}"
+    echo ""
+    echo "    bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh) YOUR_API_KEY"
+    echo ""
+    exit 1
+fi
+
+# ============================================
+#   GET INPUT
+# ============================================
+
+API_KEY="$1"
 MODEL_NUM="${2:-1}"
 
 if [ -z "$API_KEY" ]; then
     header
     echo "  ${R}Usage:${D}"
     echo ""
-    echo "    sh install-termux.sh YOUR_API_KEY [MODEL_NUMBER]"
+    echo "    bash install-termux.sh YOUR_API_KEY [MODEL_NUMBER]"
     echo ""
     echo "  ${W}Examples:${D}"
     echo ""
-    echo "    sh install-termux.sh sk-or-v1-abc123"
-    echo "    sh install-termux.sh sk-or-v1-abc123 2"
+    echo "    bash install-termux.sh ***"
+    echo "    bash install-termux.sh *** 2"
     echo ""
     echo "  ${W}Models:${D}"
     echo "    1 = Mimo v2.5 (Free)"
-    echo "    2 = Claude Sonnet 4 (~\$3/1M)"
-    echo "    3 = GPT-4o-mini (~\$0.15/1M)"
+    echo "    2 = Claude Sonnet 4 (approx 3 dollar/1M)"
+    echo "    3 = GPT-4o-mini (approx 0.15 dollar/1M)"
     echo "    4 = Gemini Flash (Free tier)"
     echo ""
     echo "  ${W}Get API key:${D} https://openrouter.ai"
@@ -95,8 +109,8 @@ fi
 echo ""
 echo "  ${W}Plan:${D}"
 echo ""
-echo "    API Key: ${C}${API_KEY:0:10}...${D}"
-echo "    Model:   ${C}$MODEL${D}"
+echo "    API Key: ***..."
+echo "    Model:   ${MODEL}"
 echo ""
 echo "  Installing:"
 echo "    1. Termux packages"
@@ -172,7 +186,7 @@ log "Installing XFCE4..."
 proot-distro login ubuntu -- bash -c "apt install -y xfce4 xfce4-goodies dbus-x11" 2>&1 | tail -5
 
 log "Cleaning up login managers..."
-proot-distro login ubuntu -- bash -c "for f in \$(find /usr -type f -iname '*login1*'); do rm -rf \$f; done" 2>&1 | tail -3
+proot-distro login ubuntu -- bash -c 'for f in $(find /usr -type f -iname "*login1*"); do rm -rf $f; done' 2>&1 | tail -3
 
 ok "XFCE4 installed"
 
@@ -196,10 +210,10 @@ log "Running official Hermes installer..."
 proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
 
 log "Configuring Hermes..."
-proot-distro login ubuntu -- bash -c "mkdir -p ~/.hermes && echo 'OPENROUTER_API_KEY=$API_KEY' > ~/.hermes/.env"
+proot-distro login ubuntu -- bash -c "mkdir -p ~/.hermes && echo 'OPENROUTER_API_KEY=*** > ~/.hermes/.env"
 proot-distro login ubuntu -- bash -c "cat > ~/.hermes/config.yaml << CFGEOF
 model:
-  default: $MODEL
+  default: ${MODEL}
   provider: openrouter
   base_url: https://openrouter.ai/api/v1
   api_mode: chat_completions
@@ -219,19 +233,19 @@ step 7 "Creating launchers"
 mkdir -p "$PREFIX/bin"
 
 cat > "$PREFIX/bin/hermes" << 'HERMES_LAUNCHER'
-#!/bin/bash
+#!/bin/sh
 proot-distro login ubuntu -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes $*"
 HERMES_LAUNCHER
 chmod +x "$PREFIX/bin/hermes"
 
 cat > "$PREFIX/bin/ubuntu" << 'UBUNTU_LAUNCHER'
-#!/bin/bash
+#!/bin/sh
 proot-distro login ubuntu
 UBUNTU_LAUNCHER
 chmod +x "$PREFIX/bin/ubuntu"
 
 cat > "$PREFIX/bin/startxfce" << 'XFCE_LAUNCHER'
-#!/bin/bash
+#!/bin/sh
 echo "Starting XFCE4 Desktop..."
 echo "Open Termux X11 app to see the desktop."
 termux-x11 :0 &

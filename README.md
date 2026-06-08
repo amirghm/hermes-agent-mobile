@@ -100,9 +100,9 @@ sh <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/ma
 
 **Examples:**
 ```sh
-sh <(curl -fsSL ...) sk-or-v1-abc123...        # Free Mimo model
-sh <(curl -fsSL ...) sk-or-v1-abc123... 2      # Claude Sonnet 4
-sh <(curl -fsSL ...) sk-or-v1-abc123... 3      # GPT-4o-mini
+bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh) ***...        # Free Mimo model
+bash <(curl -fsSL ...) ***... 2      # Claude Sonnet 4
+bash <(curl -fsSL ...) ***... 3      # GPT-4o-mini
 ```
 
 **Models:** 1=Mimo(free), 2=Claude, 3=GPT-4o-mini, 4=Gemini(free)
