@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 # ============================================
 #   Hermes-Agent Full Installer for Termux
 #   Sets up Ubuntu + XFCE + Hermes
-#   User only inputs what's needed
+#   Usage: sh install-termux.sh <API_KEY> [MODEL_NUMBER]
 # ============================================
 
 set -e
@@ -44,6 +44,43 @@ fail() { echo "  ${R}x${D} $1"; exit 1; }
 log()  { echo "  $1"; }
 
 # ============================================
+#   GET INPUT (from arguments, not interactive)
+# ============================================
+
+API_KEY="${1:-}"
+MODEL_NUM="${2:-1}"
+
+if [ -z "$API_KEY" ]; then
+    header
+    echo "  ${R}Usage:${D}"
+    echo ""
+    echo "    sh install-termux.sh YOUR_API_KEY [MODEL_NUMBER]"
+    echo ""
+    echo "  ${W}Examples:${D}"
+    echo ""
+    echo "    sh install-termux.sh sk-or-v1-abc123"
+    echo "    sh install-termux.sh sk-or-v1-abc123 2"
+    echo ""
+    echo "  ${W}Models:${D}"
+    echo "    1 = Mimo v2.5 (Free)"
+    echo "    2 = Claude Sonnet 4 (~\$3/1M)"
+    echo "    3 = GPT-4o-mini (~\$0.15/1M)"
+    echo "    4 = Gemini Flash (Free tier)"
+    echo ""
+    echo "  ${W}Get API key:${D} https://openrouter.ai"
+    echo ""
+    exit 1
+fi
+
+case "$MODEL_NUM" in
+    1) MODEL="xiaomi/mimo-v2.5" ;;
+    2) MODEL="anthropic/claude-sonnet-4" ;;
+    3) MODEL="openai/gpt-4o-mini" ;;
+    4) MODEL="google/gemini-2.0-flash-001" ;;
+    *) MODEL="xiaomi/mimo-v2.5" ;;
+esac
+
+# ============================================
 #   START
 # ============================================
 
@@ -55,53 +92,19 @@ else
     warn "Does not look like Termux. Might still work."
 fi
 
-# ============================================
-#   USER INPUT (only what's needed)
-# ============================================
-
-echo "  ${W}I need a few things from you:${D}"
 echo ""
-echo "  1. API Key for AI models"
-echo "     Get one free at: https://openrouter.ai"
-echo ""
-printf "  API Key (starts with sk-or-...): "
-read API_KEY
-
-echo ""
-echo "  2. Choose your AI model:"
-echo ""
-echo "     ${G}1)${D} Mimo v2.5      Free         Good for starters"
-echo "     ${G}2)${D} Claude Sonnet4  ~\$3/1M      Best quality"
-echo "     ${G}3)${D} GPT-4o-mini     ~\$0.15/1M   Fast and cheap"
-echo "     ${G}4)${D} Gemini Flash    Free tier    Google models"
-echo ""
-printf "  Pick [1-4] (default: 1): "
-read MODEL_CHOICE
-
-case "${MODEL_CHOICE:-1}" in
-    1) MODEL="xiaomi/mimo-v2.5" ;;
-    2) MODEL="anthropic/claude-sonnet-4" ;;
-    3) MODEL="openai/gpt-4o-mini" ;;
-    4) MODEL="google/gemini-2.0-flash-001" ;;
-    *) MODEL="xiaomi/mimo-v2.5" ;;
-esac
-
-echo ""
-echo "  ${W}OK! Here's the plan:${D}"
+echo "  ${W}Plan:${D}"
 echo ""
 echo "    API Key: ${C}${API_KEY:0:10}...${D}"
 echo "    Model:   ${C}$MODEL${D}"
 echo ""
-echo "  I will now install everything automatically:"
+echo "  Installing:"
 echo "    1. Termux packages"
-echo "    2. Ubuntu 24.04 (via PRoot)"
+echo "    2. Ubuntu 24.04"
 echo "    3. XFCE4 Desktop"
 echo "    4. Hermes-Agent"
 echo ""
-echo "  ${Y}This takes 10-15 minutes. Don't close the app.${D}"
-echo ""
-printf "  Press Enter to start..."
-read _
+echo "  ${Y}This takes 10-15 minutes.${D}"
 
 # ============================================
 #   STEP 1: Termux packages
@@ -149,7 +152,6 @@ proot-distro login ubuntu -- bash -c "apt update && apt upgrade -y" 2>&1 | tail 
 log "Installing base tools..."
 proot-distro login ubuntu -- bash -c "apt install -y sudo nano adduser" 2>&1 | tail -3
 
-# Create user
 if proot-distro login ubuntu -- id hermes >/dev/null 2>&1; then
     ok "User 'hermes' exists"
 else
@@ -166,7 +168,7 @@ fi
 
 step 4 "Installing XFCE4 Desktop"
 
-log "Installing XFCE4 and dependencies..."
+log "Installing XFCE4..."
 proot-distro login ubuntu -- bash -c "apt install -y xfce4 xfce4-goodies dbus-x11" 2>&1 | tail -5
 
 log "Cleaning up login managers..."
@@ -180,7 +182,6 @@ ok "XFCE4 installed"
 
 step 5 "Installing build tools"
 
-log "Installing compilers and libraries..."
 proot-distro login ubuntu -- bash -c "apt install -y python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config" 2>&1 | tail -5
 
 ok "Build tools installed"
@@ -194,10 +195,9 @@ step 6 "Installing Hermes-Agent"
 log "Running official Hermes installer..."
 proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
 
-# Configure Hermes
 log "Configuring Hermes..."
-proot-distro login ubuntu -- bash -c "mkdir -p ~/.hermes && echo 'OPENROUTER_API_KEY=$API_KEY' > ~/.hermes/.env" 2>&1 | tail -3
-proot-distro login ubuntu -- bash -c "cat > ~/.hermes/config.yaml << 'CFGEOF'
+proot-distro login ubuntu -- bash -c "mkdir -p ~/.hermes && echo 'OPENROUTER_API_KEY=$API_KEY' > ~/.hermes/.env"
+proot-distro login ubuntu -- bash -c "cat > ~/.hermes/config.yaml << CFGEOF
 model:
   default: $MODEL
   provider: openrouter
@@ -206,7 +206,7 @@ model:
 
 agent:
   max_turns: 10
-CFGEOF" 2>&1 | tail -3
+CFGEOF"
 
 ok "Hermes-Agent installed and configured"
 
@@ -218,23 +218,20 @@ step 7 "Creating launchers"
 
 mkdir -p "$PREFIX/bin"
 
-# Hermes launcher
 cat > "$PREFIX/bin/hermes" << 'HERMES_LAUNCHER'
-#!/bin/sh
+#!/bin/bash
 proot-distro login ubuntu -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes $*"
 HERMES_LAUNCHER
 chmod +x "$PREFIX/bin/hermes"
 
-# Ubuntu shell launcher
 cat > "$PREFIX/bin/ubuntu" << 'UBUNTU_LAUNCHER'
-#!/bin/sh
+#!/bin/bash
 proot-distro login ubuntu
 UBUNTU_LAUNCHER
 chmod +x "$PREFIX/bin/ubuntu"
 
-# XFCE launcher
 cat > "$PREFIX/bin/startxfce" << 'XFCE_LAUNCHER'
-#!/bin/sh
+#!/bin/bash
 echo "Starting XFCE4 Desktop..."
 echo "Open Termux X11 app to see the desktop."
 termux-x11 :0 &
