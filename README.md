@@ -1,4 +1,14 @@
-# Hermes-Agent Mobile
+<p align="center">
+  <img src="https://raw.githubusercontent.com/NousResearch/hermes-agent/main/assets/banner.png" alt="Hermes Agent" width="100%">
+</p>
+
+# Hermes-Agent Mobile ☤
+
+<p align="center">
+  <a href="https://github.com/amirghm/hermes-agent-mobile/releases"><img src="https://img.shields.io/github/v/release/amirghm/hermes-agent-mobile?style=for-the-badge&color=blue" alt="Release"></a>
+  <a href="https://hermes-agent.nousresearch.com"><img src="https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge" alt="Docs"></a>
+  <a href="https://github.com/amirghm/hermes-agent-mobile/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
+</p>
 
 🤖 **Your AI assistant, right in your pocket.**
 
