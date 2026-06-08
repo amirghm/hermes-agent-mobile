@@ -26,7 +26,7 @@ header() {
     printf "  ${C}|${W}||  _  |  / |  | | | | | |  /\\__ \\ ${C}|${D}\n"
     printf "  ${C}|${W}||_| |_|\\___|_|  |_| |_| |_|\\___||___/ ${C}|${D}\n"
     printf "  ${C}|${W}                                       ${C}|${D}\n"
-    printf "  ${C}|${W}  📱 Full Installer v1.4               ${C}|${D}\n"
+    printf "  ${C}|${W}  📱 Full Installer v1.5               ${C}|${D}\n"
     printf "  ${C}|${W}  🤖 Debian + Fluxbox + Hermes          ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
@@ -196,11 +196,53 @@ DEBIAN_LAUNCHER
 chmod +x "$PREFIX/bin/debian"
 
 cat > "$PREFIX/bin/startflux" << 'FLUXBOX_LAUNCHER'
-#!/bin/sh
-printf "Starting Fluxbox Desktop...\n"
-printf "Open Termux X11 app to see the desktop.\n"
+#!/bin/bash
+
+# Check if Termux:X11 is installed
+if ! command -v termux-x11 &> /dev/null; then
+    printf "\n"
+    printf "  \033[1;31mx Termux:X11 not found!\033[0m\n"
+    printf "\n"
+    printf "  Download and install the APK:\n"
+    printf "    \033[1;36mhttps://github.com/termux/termux-x11/releases/tag/nightly\033[0m\n"
+    printf "\n"
+    printf "  Get one of these:\n"
+    printf "    - termux-x11-arm64-v8a-debug.apk\n"
+    printf "    - termux-x11-universal-debug.apk\n"
+    printf "\n"
+    exit 1
+fi
+
+printf "\n"
+printf "  \033[1;33mStarting Fluxbox Desktop...\033[0m\n"
+printf "\n"
+printf "  \033[1;37m1. Open Termux:X11 app NOW\033[0m\n"
+printf "  \033[1;37m2. Wait for it to show a black screen\033[0m\n"
+printf "  \033[1;37m3. Then come back here and press Enter\033[0m\n"
+printf "\n"
+printf "  Press Enter when Termux:X11 is open..."
+read -r
+
+# Start X11
 termux-x11 :0 &
-sleep 2
+sleep 3
+
+# Check if X server is running
+if ! termux-x11 :0 -ls &> /dev/null; then
+    printf "\n"
+    printf "  \033[1;31mx Could not connect to X server!\033[0m\n"
+    printf "\n"
+    printf "  Make sure:\n"
+    printf "    1. Termux:X11 app is OPEN\n"
+    printf "    2. You see a black screen in the app\n"
+    printf "    3. Try closing and reopening Termux:X11\n"
+    printf "\n"
+    exit 1
+fi
+
+printf "  \033[1;32mv Connected to X server\033[0m\n"
+printf "\n"
+printf "  Starting Fluxbox...\n"
 proot-distro login debian -- bash -c "export DISPLAY=:0; dbus-launch fluxbox"
 FLUXBOX_LAUNCHER
 chmod +x "$PREFIX/bin/startflux"
@@ -232,12 +274,16 @@ printf "    ${C}debian${D}          ${W}Enter Debian shell${D}\n"
 printf "    ${C}startflux${D}       ${W}Start Fluxbox desktop (GUI)${D}\n"
 printf "\n"
 printf "  ${W}Desktop (GUI):${D}\n"
-printf "    1. Install ${C}Termux:X11${D} from ${C}F-Droid${D}\n"
-printf "    2. Run ${C}startflux${D}\n"
-printf "    3. Open Termux:X11 app\n"
+printf "    1. Install ${C}Termux:X11${D} from GitHub\n"
+printf "       ${C}https://github.com/termux/termux-x11/releases/tag/nightly\033[0m\n"
+printf "    2. Open Termux:X11 app (black screen)\n"
+printf "    3. Run ${C}startflux${D} in Termux\n"
 printf "\n"
 printf "  ${Y}⚠  Termux:X11 is REQUIRED for GUI desktop${D}\n"
-printf "     Download: ${C}https://f-droid.org/packages/com.termux.x11/${D}\n"
+printf "     Download APK from GitHub link above\n"
+printf "\n"
+printf "  ${W}Note:${D} Hermes works in terminal too (no GUI needed)\n"
+printf "       Firefox runs headless for web browsing\n"
 printf "\n"
 printf "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}\n"
 printf "\n"
