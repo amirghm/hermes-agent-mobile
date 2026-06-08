@@ -37,7 +37,7 @@ header() {
     printf "  ${C}|${W}%s${C}|${D}\n" '                                       '
     printf "  ${C}|${W}  📱 Mobile Installer v0.16.0          ${C}|${D}\n"
     printf "  ${C}|${W}  🤖 by NousResearch                   ${C}|${D}\n"
-    printf "  ${C}|${W}  ✍️ wrote by @amirghm                 ${C}|${D}\n"
+    printf "  ${C}|${W}  ✍️ wrote by @amirghm                  ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     echo ""
 }

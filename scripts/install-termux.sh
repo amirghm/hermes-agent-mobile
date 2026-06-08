@@ -28,7 +28,7 @@ header() {
     printf "  ${C}|${W}%s${C}|${D}\n" '                                       '
     printf "  ${C}|${W}  📱 Full Installer v2.0               ${C}|${D}\n"
     printf "  ${C}|${W}  🤖 Debian + Firefox + Hermes         ${C}|${D}\n"
-    printf "  ${C}|${W}  ✍️ wrote by @amirghm                ${C}|${D}\n"
+    printf "  ${C}|${W}  ✍️ wrote by @amirghm                  ${C}|${D}\n"
     printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
 }
