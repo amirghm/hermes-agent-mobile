@@ -67,7 +67,7 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 | Cron jobs | ✅ | Scheduled tasks and monitoring |
 | File operations | ✅ | Read, write, edit files |
 | Web search | ✅ | Brave search API |
-| Browser | ⚠️ | Needs PRoot + XFCE desktop for Firefox |
+| Browser | ✅ | Firefox headless via Playwright |
 | Chromium | ❌ | PRoot sandbox issues. Always use Firefox |
 | Image generation | ✅ | Via API (FAL, OpenAI, etc.) |
 | Multiple agents | ✅ | Run 7+ bots at the same time |
@@ -104,6 +104,10 @@ After install, Hermes will guide you through setup (API key, model selection, et
 - `hermes setup` - Configure API key & model
 - `debian` - Enter Debian shell
 
+<p align="center">
+  <img src="images/termux-installer-v2.jpg" alt="Termux Installer" width="300">
+</p>
+
 ### 🍎 iOS (iSH)
 
 ```sh
@@ -121,6 +125,10 @@ Add your OpenRouter API key (get one free at https://openrouter.ai):
 ```
 OPENROUTER_API_KEY=sk-or-...
 ```
+
+<p align="center">
+  <img src="images/ish-hermes-running.jpg" alt="Hermes on iSH" width="300">
+</p>
 
 ## Requirements
 
