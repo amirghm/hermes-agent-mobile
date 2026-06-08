@@ -95,22 +95,13 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 One command does everything: installs Ubuntu, XFCE4 desktop, and Hermes.
 
 ```sh
-sh <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh) YOUR_API_KEY [MODEL_NUMBER]
+bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)
 ```
 
-**Examples:**
-```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh) ***...        # Free Mimo model
-bash <(curl -fsSL ...) ***... 2      # Claude Sonnet 4
-bash <(curl -fsSL ...) ***... 3      # GPT-4o-mini
-```
+After install, Hermes will guide you through setup (API key, model selection, etc.)
 
-**Models:** 1=Mimo(free), 2=Claude, 3=GPT-4o-mini, 4=Gemini(free)
-
-Get your API key at: https://openrouter.ai
-
-After install:
 - `hermes` - Start Hermes chat
+- `hermes setup` - Configure API key & model
 - `ubuntu` - Enter Ubuntu shell
 - `startxfce` - Start XFCE4 desktop (needs Termux X11 app)
 

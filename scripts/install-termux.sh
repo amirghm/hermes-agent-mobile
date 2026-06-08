@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 # ============================================
 #   Hermes-Agent Full Installer for Termux
 #   Sets up Ubuntu + XFCE + Hermes
-#   Usage: bash install-termux.sh <API_KEY> [MODEL_NUMBER]
+#   Usage: bash install-termux.sh
 # ============================================
 
 set -e
@@ -21,11 +21,11 @@ header() {
     echo -e "  ${C}+---------------------------------------+${D}"
     echo -e "  ${C}|${W}" ' _   _                                ' "${C}|${D}"
     echo -e "  ${C}|${W}" '| | | | ___ _  _  ___   ___  ___  ' "${C}|${D}"
-    echo -e "  ${C}|${W}" '| |_| |/ _ \ '\''| '\''_ ` _ \ / _ \/ | ' "${C}|${D}"
+    echo -e "  ${C}|${W}" '| |_| |/ _ \ '\''| '\''_ ` _ \ / _ \\/ | ' "${C}|${D}"
     echo -e "  ${C}|${W}" '|  _  |  / |  | | | | | |  /\__ \ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '|_| |_|\___|_|  |_| |_| |_|\___||___/ ' "${C}|${D}"
     echo -e "  ${C}|${W}" '                                       ' "${C}|${D}"
-    echo -e "  ${C}|${W}  📱 Full Installer v0.16.1             ${C}|${D}"
+    echo -e "  ${C}|${W}  📱 Full Installer v1.0               ${C}|${D}"
     echo -e "  ${C}|${W}  🤖 Ubuntu + XFCE + Hermes            ${C}|${D}"
     echo -e "  ${C}+---------------------------------------+${D}"
     echo ""
@@ -52,47 +52,10 @@ if [ -z "$BASH_VERSION" ]; then
     echo ""
     echo -e "  ${W}Use:${D}"
     echo ""
-    echo "    bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh) YOUR_API_KEY"
+    echo "    bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)"
     echo ""
     exit 1
 fi
-
-# ============================================
-#   GET INPUT
-# ============================================
-
-API_KEY="$1"
-MODEL_NUM="${2:-1}"
-
-if [ -z "$API_KEY" ]; then
-    header
-    echo -e "  ${R}Usage:${D}"
-    echo ""
-    echo "    bash install-termux.sh YOUR_API_KEY [MODEL_NUMBER]"
-    echo ""
-    echo -e "  ${W}Examples:${D}"
-    echo ""
-    echo "    bash install-termux.sh ***"
-    echo "    bash install-termux.sh *** 2"
-    echo ""
-    echo -e "  ${W}Models:${D}"
-    echo "    1 = Mimo v2.5 (Free)"
-    echo "    2 = Claude Sonnet 4 (approx 3 dollar/1M)"
-    echo "    3 = GPT-4o-mini (approx 0.15 dollar/1M)"
-    echo "    4 = Gemini Flash (Free tier)"
-    echo ""
-    echo -e "  ${W}Get API key:${D} https://openrouter.ai"
-    echo ""
-    exit 1
-fi
-
-case "$MODEL_NUM" in
-    1) MODEL="xiaomi/mimo-v2.5" ;;
-    2) MODEL="anthropic/claude-sonnet-4" ;;
-    3) MODEL="openai/gpt-4o-mini" ;;
-    4) MODEL="google/gemini-2.0-flash-001" ;;
-    *) MODEL="xiaomi/mimo-v2.5" ;;
-esac
 
 # ============================================
 #   START
@@ -107,18 +70,19 @@ else
 fi
 
 echo ""
-echo -e "  ${W}Plan:${D}"
+echo -e "  ${W}Installing:${D}"
 echo ""
-echo "    API Key: ***..."
-echo "    Model:   ${MODEL}"
-echo ""
-echo "  Installing:"
 echo "    1. Termux packages"
 echo "    2. Ubuntu 24.04"
 echo "    3. XFCE4 Desktop"
 echo "    4. Hermes-Agent"
 echo ""
 echo -e "  ${Y}This takes 10-15 minutes.${D}"
+echo ""
+echo -e "  ${W}After install, run:${D}"
+echo "    ${C}hermes${D}  to start Hermes"
+echo "    ${C}hermes setup${D}  to configure API key & model"
+echo ""
 
 # ============================================
 #   STEP 1: Termux packages
@@ -207,7 +171,7 @@ proot-distro login ubuntu -- bash -c "apt install -y python3 python3-pip python3
 ok "Build tools installed"
 
 # ============================================
-#   STEP 6: Install Hermes
+#   STEP 6: Install Hermes (skip setup)
 # ============================================
 
 step 6 "Installing Hermes-Agent"
@@ -215,20 +179,7 @@ step 6 "Installing Hermes-Agent"
 log "Running official Hermes installer..."
 proot-distro login ubuntu -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
 
-log "Configuring Hermes..."
-proot-distro login ubuntu -- bash -c "mkdir -p ~/.hermes && echo 'OPENROUTER_API_KEY=*** > ~/.hermes/.env"
-proot-distro login ubuntu -- bash -c "cat > ~/.hermes/config.yaml << CFGEOF
-model:
-  default: ${MODEL}
-  provider: openrouter
-  base_url: https://openrouter.ai/api/v1
-  api_mode: chat_completions
-
-agent:
-  max_turns: 10
-CFGEOF"
-
-ok "Hermes-Agent installed and configured"
+ok "Hermes-Agent installed"
 
 # ============================================
 #   STEP 7: Create launchers
@@ -273,6 +224,7 @@ echo ""
 echo -e "  ${W}Commands:${D}"
 echo ""
 echo "    ${C}hermes${D}          ${W}Start Hermes chat${D}"
+echo "    ${C}hermes setup${D}     ${W}Configure API key & model${D}"
 echo "    ${C}ubuntu${D}          ${W}Enter Ubuntu shell${D}"
 echo "    ${C}startxfce${D}       ${W}Start XFCE4 desktop${D}"
 echo ""
