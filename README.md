@@ -11,9 +11,9 @@
 </p>
 
 <p align="center">
-  <img src="images/installation-1.jpg" alt="Installation 1" width="30%">
-  <img src="images/installation-2.jpg" alt="Installation 2" width="30%">
+  <img src="images/installation.jpg" alt="Installation" width="30%">
   <img src="images/termux-hermes-running.jpg" alt="Hermes Running" width="30%">
+  <img src="images/telegram-bot.jpg" alt="Telegram Bot" width="30%">
 </p>
 
 🤖 **Your AI assistant, right in your pocket.**
