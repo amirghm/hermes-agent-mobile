@@ -74,7 +74,7 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 | File operations | ✅ | Read, write, edit files |
 | Web search | ✅ | Brave search API |
 | Browser | ✅ | Firefox headless via Playwright |
-| Chromium | ❌ | PRoot sandbox issues. Always use Firefox |
+| Chromium | ⚠️ | PRoot sandbox issues. Always use Firefox |
 | Image generation | ✅ | Via API (FAL, OpenAI, etc.) |
 | Multiple agents | ✅ | Run 7+ bots at the same time |
 | Subagent delegation | ✅ | Parallel task execution |
