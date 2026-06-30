@@ -92,16 +92,20 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 
 ### 📱 Android (Termux)
 
-One command does everything: installs Debian, Firefox, and Hermes.
+One command does everything: installs Debian, Firefox, Hermes, and then asks how you want to configure it.
 
 ```sh
 bash <(curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-termux.sh)
 ```
 
-After install, Hermes will guide you through setup (API key, model selection, etc.)
+During setup you can choose:
+
+- **Quick setup** - enter only your OpenRouter API key and Telegram bot token. The installer uses `xiaomi/mimo-v2.5`, configures Telegram, starts the gateway, and opens Hermes.
+- **Normal setup** - run the official Hermes setup wizard for custom providers, models, gateways, and advanced options.
 
 - `hermes` - Start Hermes chat
 - `hermes setup` - Configure API key & model
+- `hermes gateway` - Start Telegram/messaging gateway
 - `debian` - Enter Debian shell
 
 ### 🍎 iOS (iSH)
@@ -126,7 +130,7 @@ OPENROUTER_API_KEY=sk-or-...
 
 | Platform | What you need |
 |----------|--------------|
-| Android | Termux app (F-Droid version), ~500MB storage |
+| Android | Termux app (Google Play works for this setup; F-Droid/GitHub recommended for advanced Termux usage), ~4GB free storage |
 | iOS | iSH app (App Store), ~200MB storage |
 
 ## License

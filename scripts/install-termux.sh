@@ -45,6 +45,84 @@ warn() { printf "  ${Y}!${D} $1\n"; }
 fail() { printf "  ${R}x${D} $1\n"; exit 1; }
 log()  { printf "  $1\n"; }
 
+ask() {
+    printf "  ${W}$1${D} "
+    read -r "$2"
+}
+
+ask_secret() {
+    printf "  ${W}$1${D} "
+    read -r -s "$2"
+    printf "\n"
+}
+
+quick_setup_hermes() {
+    printf "\n"
+    printf "  ${C}Quick Setup: OpenRouter + Telegram${D}\n"
+    printf "\n"
+    printf "  ${W}This will configure Hermes with:${D}\n"
+    printf "    ${C}Provider:${D} OpenRouter\n"
+    printf "    ${C}Model:${D}    xiaomi/mimo-v2.5\n"
+    printf "    ${C}Gateway:${D}  Telegram\n"
+    printf "\n"
+
+    OPENROUTER_API_KEY=""
+    TELEGRAM_BOT_TOKEN=""
+    MODEL_NAME="xiaomi/mimo-v2.5"
+
+    while [ -z "$OPENROUTER_API_KEY" ]; do
+        ask_secret "OpenRouter API key:" OPENROUTER_API_KEY
+    done
+
+    while [ -z "$TELEGRAM_BOT_TOKEN" ]; do
+        ask_secret "Telegram bot token:" TELEGRAM_BOT_TOKEN
+    done
+
+    ask "Model [xiaomi/mimo-v2.5]:" MODEL_INPUT
+    if [ -n "$MODEL_INPUT" ]; then
+        MODEL_NAME="$MODEL_INPUT"
+    fi
+
+    log "Writing Hermes config..."
+    proot-distro login debian -- env \
+        HERMES_QUICK_OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
+        HERMES_QUICK_TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
+        HERMES_QUICK_MODEL="$MODEL_NAME" \
+        bash -c '
+set -e
+mkdir -p ~/.hermes/logs ~/.hermes/sessions ~/.hermes/cron ~/.hermes/memories ~/.hermes/skills
+ENV_FILE="$HOME/.hermes/.env"
+CONFIG_FILE="$HOME/.hermes/config.yaml"
+touch "$ENV_FILE"
+chmod 600 "$ENV_FILE"
+
+TMP_ENV="$(mktemp)"
+grep -v -E "^(OPENROUTER_API_KEY|TELEGRAM_BOT_TOKEN)=" "$ENV_FILE" > "$TMP_ENV" 2>/dev/null || true
+{
+  cat "$TMP_ENV"
+  printf "%s=%s\n" "OPENROUTER_API_KEY" "$HERMES_QUICK_OPENROUTER_API_KEY"
+  printf "%s=%s\n" "TELEGRAM_BOT_TOKEN" "$HERMES_QUICK_TELEGRAM_BOT_TOKEN"
+} > "$ENV_FILE"
+rm -f "$TMP_ENV"
+chmod 600 "$ENV_FILE"
+
+cat > "$CONFIG_FILE" <<CONFIG_EOF
+model:
+  default: ${HERMES_QUICK_MODEL}
+  provider: openrouter
+  base_url: https://openrouter.ai/api/v1
+  api_mode: chat_completions
+agent:
+  max_turns: 10
+CONFIG_EOF
+'
+    ok "Quick setup saved"
+
+    log "Starting Telegram gateway in the background..."
+    proot-distro login debian -- bash -c 'source ~/.bashrc 2>/dev/null; mkdir -p ~/.hermes/logs; nohup hermes gateway > ~/.hermes/logs/gateway.log 2>&1 &'
+    ok "Gateway started"
+}
+
 # ============================================
 #   CHECK: must be run with bash, not sh
 # ============================================
@@ -75,6 +153,7 @@ fi
 # Check what's already installed
 DEBIAN_INSTALLED=false
 HERMES_INSTALLED=false
+QUICK_SETUP_RAN=false
 
 if proot-distro login debian -- echo "ok" >/dev/null 2>&1; then
     DEBIAN_INSTALLED=true
@@ -223,9 +302,26 @@ fi
 if [ "$HERMES_CONFIGURED" = true ]; then
     skip "Hermes already configured"
 else
-    printf "  ${W}Setting up Hermes (API key, model, etc.)${D}\n"
+    printf "  ${W}Choose setup mode:${D}\n"
     printf "\n"
-    proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
+    printf "    ${C}1) Quick setup${D}  ${W}OpenRouter + Telegram, recommended for mobile${D}\n"
+    printf "    ${C}2) Normal setup${D} ${W}Official Hermes setup wizard${D}\n"
+    printf "\n"
+    printf "  ${W}Select [1]:${D} "
+    read -r SETUP_MODE
+    printf "\n"
+
+    case "$SETUP_MODE" in
+        2|normal|Normal|NORMAL)
+            printf "  ${W}Starting official Hermes setup wizard...${D}\n"
+            printf "\n"
+            proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
+            ;;
+        *)
+            quick_setup_hermes
+            QUICK_SETUP_RAN=true
+            ;;
+    esac
 fi
 
 # ============================================
@@ -240,7 +336,14 @@ printf "  ${W}Commands:${D}\n"
 printf "\n"
 printf "    ${C}hermes${D}          ${W}Start Hermes chat${D}\n"
 printf "    ${C}hermes setup${D}     ${W}Configure API key & model${D}\n"
+printf "    ${C}hermes gateway${D}   ${W}Start Telegram/messaging gateway${D}\n"
 printf "    ${C}debian${D}          ${W}Enter Debian shell${D}\n"
 printf "\n"
 printf "  ${W}Docs:${D} ${C}https://hermes-agent.nousresearch.com${D}\n"
 printf "\n"
+
+if [ "$QUICK_SETUP_RAN" = true ]; then
+    printf "  ${W}Starting Hermes chat...${D}\n"
+    printf "\n"
+    proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes"
+fi
