@@ -45,6 +45,34 @@ warn() { printf "  ${Y}!${D} $1\n"; }
 fail() { printf "  ${R}x${D} $1\n"; exit 1; }
 log()  { printf "  $1\n"; }
 
+run_with_spinner() {
+    MESSAGE="$1"
+    LOG_FILE="$2"
+    shift 2
+
+    printf "  ${W}%s${D}" "$MESSAGE"
+    "$@" > "$LOG_FILE" 2>&1 &
+    COMMAND_PID=$!
+    SPINNER='|/-\'
+    SPINNER_INDEX=0
+
+    while kill -0 "$COMMAND_PID" 2>/dev/null; do
+        SPINNER_INDEX=$(( (SPINNER_INDEX + 1) % 4 ))
+        printf "\r  ${W}%s${D} ${C}%s${D}" "$MESSAGE" "$(printf '%s' "$SPINNER" | cut -c $((SPINNER_INDEX + 1)))"
+        sleep 1
+    done
+
+    wait "$COMMAND_PID"
+    RESULT=$?
+    if [ "$RESULT" -eq 0 ]; then
+        printf "\r  ${G}v${D} %s\n" "$MESSAGE"
+    else
+        printf "\r  ${R}x${D} %s\n" "$MESSAGE"
+        tail -20 "$LOG_FILE" 2>/dev/null || true
+        return "$RESULT"
+    fi
+}
+
 ask() {
     printf "  ${W}$1${D} "
     read -r "$2"
@@ -56,7 +84,32 @@ ask_secret() {
     printf "\n"
 }
 
-quick_setup_hermes() {
+choose_setup_mode() {
+    SETUP_MODE="quick"
+    QUICK_SETUP_REQUESTED=false
+
+    printf "  ${W}Choose setup mode:${D}\n"
+    printf "\n"
+    printf "    ${C}1) Quick setup${D}  ${W}OpenRouter + Telegram, recommended for mobile${D}\n"
+    printf "    ${C}2) Normal setup${D} ${W}Official Hermes setup wizard${D}\n"
+    printf "\n"
+    printf "  ${W}Select [1]:${D} "
+    read -r SETUP_MODE_INPUT
+    printf "\n"
+
+    case "$SETUP_MODE_INPUT" in
+        2|normal|Normal|NORMAL)
+            SETUP_MODE="normal"
+            ;;
+        *)
+            SETUP_MODE="quick"
+            QUICK_SETUP_REQUESTED=true
+            collect_quick_setup
+            ;;
+    esac
+}
+
+collect_quick_setup() {
     printf "\n"
     printf "  ${C}Quick Setup: OpenRouter + Telegram${D}\n"
     printf "\n"
@@ -83,6 +136,51 @@ quick_setup_hermes() {
         MODEL_NAME="$MODEL_INPUT"
     fi
 
+    printf "\n"
+    printf "  ${W}Open your Telegram bot and send:${D} ${C}/start${D}\n"
+    printf "  ${W}When you are done, press Enter here. The installer will detect the chat and send a ready message at the end.${D}\n"
+    printf "\n"
+    printf "  ${W}Press Enter to continue:${D} "
+    read -r _
+    printf "\n"
+
+    ok "Quick setup details saved"
+}
+
+telegram_chat_id() {
+    if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+        return 1
+    fi
+
+    curl -fsSL "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates" 2>/dev/null \
+        | sed -n 's/.*"chat":{"id":\(-\{0,1\}[0-9][0-9]*\).*/\1/p' \
+        | tail -1
+}
+
+send_telegram_ready_message() {
+    if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+        return 0
+    fi
+
+    CHAT_ID="$(telegram_chat_id || true)"
+    if [ -z "$CHAT_ID" ]; then
+        warn "Could not detect Telegram chat. Send /start to your bot, then run: hermes gateway"
+        return 0
+    fi
+
+    curl -fsSL \
+        -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${CHAT_ID}" \
+        --data-urlencode "text=Hermes Agent is installed and running on your phone. Your AI employee just clocked in." \
+        >/dev/null 2>&1 || {
+            warn "Could not send Telegram ready message"
+            return 0
+        }
+
+    ok "Ready message sent to Telegram"
+}
+
+apply_quick_setup() {
     log "Writing Hermes config..."
     proot-distro login debian -- env \
         HERMES_QUICK_OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
@@ -149,6 +247,8 @@ if [ -d "/data/data/com.termux" ]; then
 else
     warn "Does not look like Termux. Might still work."
 fi
+
+choose_setup_mode
 
 # Check what's already installed
 DEBIAN_INSTALLED=false
@@ -245,9 +345,10 @@ fi
 
 step 4 "Installing Firefox + build tools"
 
-proot-distro login debian -- bash -c "apt install -y firefox-esr python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config" 2>&1 | tail -5
-
-ok "Firefox + build tools installed"
+log "This is the slowest step. Firefox and build tools pull many Debian packages."
+STEP4_LOG="${TMPDIR:-/tmp}/hermes-step4-install.log"
+run_with_spinner "Installing Debian packages. This can take a few minutes..." "$STEP4_LOG" \
+    proot-distro login debian -- bash -c "apt install -y firefox-esr python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config"
 
 # ============================================
 #   STEP 5: Install Hermes
@@ -302,24 +403,16 @@ fi
 if [ "$HERMES_CONFIGURED" = true ]; then
     skip "Hermes already configured"
 else
-    printf "  ${W}Choose setup mode:${D}\n"
-    printf "\n"
-    printf "    ${C}1) Quick setup${D}  ${W}OpenRouter + Telegram, recommended for mobile${D}\n"
-    printf "    ${C}2) Normal setup${D} ${W}Official Hermes setup wizard${D}\n"
-    printf "\n"
-    printf "  ${W}Select [1]:${D} "
-    read -r SETUP_MODE
-    printf "\n"
-
     case "$SETUP_MODE" in
-        2|normal|Normal|NORMAL)
+        normal)
             printf "  ${W}Starting official Hermes setup wizard...${D}\n"
             printf "\n"
             proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
             ;;
         *)
-            quick_setup_hermes
+            apply_quick_setup
             QUICK_SETUP_RAN=true
+            send_telegram_ready_message
             ;;
     esac
 fi
