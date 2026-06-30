@@ -88,12 +88,21 @@ choose_setup_mode() {
     SETUP_MODE="quick"
     QUICK_SETUP_REQUESTED=false
 
-    printf "  ${W}Choose setup mode:${D}\n"
+    clear
     printf "\n"
-    printf "    ${C}1) Quick setup${D}  ${W}OpenRouter + Telegram, recommended for mobile${D}\n"
-    printf "    ${C}2) Normal setup${D} ${W}Official Hermes setup wizard${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "  ${C}|${W}        Hermes Mobile Setup         ${C}|${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
-    printf "  ${W}Select [1]:${D} "
+    printf "  ${C}1${D}) ${W}Quick setup${D}\n"
+    printf "     ${Y}OpenRouter + Telegram${D}\n"
+    printf "     ${W}Best for this tutorial.${D}\n"
+    printf "\n"
+    printf "  ${C}2${D}) ${W}Normal setup${D}\n"
+    printf "     ${Y}Official Hermes wizard${D}\n"
+    printf "     ${W}More providers and options.${D}\n"
+    printf "\n"
+    printf "  ${W}Select setup [1]:${D} "
     read -r SETUP_MODE_INPUT
     printf "\n"
 
@@ -110,13 +119,17 @@ choose_setup_mode() {
 }
 
 collect_quick_setup() {
+    clear
     printf "\n"
-    printf "  ${C}Quick Setup: OpenRouter + Telegram${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "  ${C}|${W}            Quick Setup             ${C}|${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
-    printf "  ${W}This will configure Hermes with:${D}\n"
-    printf "    ${C}Provider:${D} OpenRouter\n"
-    printf "    ${C}Model:${D}    xiaomi/mimo-v2.5\n"
-    printf "    ${C}Gateway:${D}  Telegram\n"
+    printf "  ${C}Provider${D}  OpenRouter\n"
+    printf "  ${C}Gateway${D}   Telegram\n"
+    printf "  ${C}Default${D}   xiaomi/mimo-v2.5\n"
+    printf "\n"
+    printf "  ${Y}Your pasted keys will be visible.${D}\n"
     printf "\n"
 
     OPENROUTER_API_KEY=""
@@ -124,21 +137,25 @@ collect_quick_setup() {
     MODEL_NAME="xiaomi/mimo-v2.5"
 
     while [ -z "$OPENROUTER_API_KEY" ]; do
-        ask_secret "OpenRouter API key:" OPENROUTER_API_KEY
+        ask "OpenRouter API key:" OPENROUTER_API_KEY
     done
 
     while [ -z "$TELEGRAM_BOT_TOKEN" ]; do
-        ask_secret "Telegram bot token:" TELEGRAM_BOT_TOKEN
+        ask "Telegram bot token:" TELEGRAM_BOT_TOKEN
     done
 
-    ask "Model [xiaomi/mimo-v2.5]:" MODEL_INPUT
+    printf "\n"
+    printf "  ${W}Choose an OpenRouter model.${D}\n"
+    printf "  ${W}Press Enter for:${D} ${C}xiaomi/mimo-v2.5${D}\n"
+    ask "Model:" MODEL_INPUT
     if [ -n "$MODEL_INPUT" ]; then
         MODEL_NAME="$MODEL_INPUT"
     fi
 
     printf "\n"
-    printf "  ${W}Open your Telegram bot and send:${D} ${C}/start${D}\n"
-    printf "  ${W}When you are done, press Enter here. The installer will detect the chat and send a ready message at the end.${D}\n"
+    printf "  ${W}Now open your Telegram bot.${D}\n"
+    printf "  ${W}Send:${D} ${C}/start${D}\n"
+    printf "  ${W}Then return here.${D}\n"
     printf "\n"
     printf "  ${W}Press Enter to continue:${D} "
     read -r _
@@ -152,7 +169,7 @@ telegram_chat_id() {
         return 1
     fi
 
-    curl -fsSL "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates" 2>/dev/null \
+    curl --connect-timeout 8 --max-time 15 -fsSL "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates" 2>/dev/null \
         | sed -n 's/.*"chat":{"id":\(-\{0,1\}[0-9][0-9]*\).*/\1/p' \
         | tail -1
 }
@@ -162,13 +179,14 @@ send_telegram_ready_message() {
         return 0
     fi
 
+    log "Sending Telegram ready message..."
     CHAT_ID="$(telegram_chat_id || true)"
     if [ -z "$CHAT_ID" ]; then
         warn "Could not detect Telegram chat. Send /start to your bot, then run: hermes gateway"
         return 0
     fi
 
-    curl -fsSL \
+    curl --connect-timeout 8 --max-time 15 -fsSL \
         -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         -d "chat_id=${CHAT_ID}" \
         --data-urlencode "text=Hermes Agent is installed and running on your phone. Your AI employee just clocked in." \
@@ -186,7 +204,7 @@ apply_quick_setup() {
         HERMES_QUICK_OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
         HERMES_QUICK_TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
         HERMES_QUICK_MODEL="$MODEL_NAME" \
-        bash -c '
+        /bin/sh -c '
 set -e
 mkdir -p ~/.hermes/logs ~/.hermes/sessions ~/.hermes/cron ~/.hermes/memories ~/.hermes/skills
 ENV_FILE="$HOME/.hermes/.env"
@@ -217,7 +235,7 @@ CONFIG_EOF
     ok "Quick setup saved"
 
     log "Starting Telegram gateway in the background..."
-    proot-distro login debian -- bash -c 'source ~/.bashrc 2>/dev/null; mkdir -p ~/.hermes/logs; nohup hermes gateway > ~/.hermes/logs/gateway.log 2>&1 &'
+    proot-distro login debian -- /bin/bash -lc 'mkdir -p ~/.hermes/logs; nohup hermes gateway > ~/.hermes/logs/gateway.log 2>&1 &'
     ok "Gateway started"
 }
 
@@ -259,7 +277,7 @@ if proot-distro login debian -- echo "ok" >/dev/null 2>&1; then
     DEBIAN_INSTALLED=true
 fi
 
-if proot-distro login debian -- bash -c "command -v hermes" >/dev/null 2>&1; then
+if proot-distro login debian -- /bin/sh -c "command -v hermes" >/dev/null 2>&1; then
     HERMES_INSTALLED=true
 fi
 
@@ -324,18 +342,18 @@ fi
 step 3 "Setting up Debian"
 
 log "Updating Debian..."
-proot-distro login debian -- bash -c "apt update && apt upgrade -y" 2>&1 | tail -5
+proot-distro login debian -- /bin/sh -c "apt update && apt upgrade -y" 2>&1 | tail -5
 
 log "Installing base tools..."
-proot-distro login debian -- bash -c "apt install -y sudo nano adduser" 2>&1 | tail -3
+proot-distro login debian -- /bin/sh -c "apt install -y bash sudo nano adduser" 2>&1 | tail -3
 
 if proot-distro login debian -- id hermes >/dev/null 2>&1; then
     ok "User 'hermes' exists"
 else
     log "Creating user 'hermes'..."
-    proot-distro login debian -- bash -c "adduser --disabled-password --gecos '' hermes" 2>&1 | tail -3
-    proot-distro login debian -- bash -c "usermod -aG sudo hermes" 2>&1 | tail -3
-    proot-distro login debian -- bash -c "echo 'hermes ALL=(ALL:ALL) ALL' >> /etc/sudoers" 2>&1 | tail -3
+    proot-distro login debian -- /bin/sh -c "adduser --disabled-password --gecos '' hermes" 2>&1 | tail -3
+    proot-distro login debian -- /bin/sh -c "usermod -aG sudo hermes" 2>&1 | tail -3
+    proot-distro login debian -- /bin/sh -c "echo 'hermes ALL=(ALL:ALL) ALL' >> /etc/sudoers" 2>&1 | tail -3
     ok "User 'hermes' created"
 fi
 
@@ -348,7 +366,7 @@ step 4 "Installing Firefox + build tools"
 log "This is the slowest step. Firefox and build tools pull many Debian packages."
 STEP4_LOG="${TMPDIR:-/tmp}/hermes-step4-install.log"
 run_with_spinner "Installing Debian packages. This can take a few minutes..." "$STEP4_LOG" \
-    proot-distro login debian -- bash -c "apt install -y firefox-esr python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config"
+    proot-distro login debian -- /bin/bash -lc "apt install -y firefox-esr python3 python3-pip python3-venv git curl build-essential libffi-dev libssl-dev pkg-config"
 
 # ============================================
 #   STEP 5: Install Hermes
@@ -360,7 +378,7 @@ if [ "$HERMES_INSTALLED" = true ]; then
     skip "Hermes already installed"
 else
     log "Running official Hermes installer..."
-    proot-distro login debian -- bash -c "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup" 2>&1 | tail -20
+    proot-distro login debian -- /bin/bash -lc "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | /bin/bash -s -- --skip-setup" 2>&1 | tail -20
     ok "Hermes installed"
 fi
 
@@ -374,7 +392,7 @@ mkdir -p "$PREFIX/bin"
 
 cat > "$PREFIX/bin/hermes" << 'HERMES_LAUNCHER'
 #!/bin/sh
-proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes $*"
+proot-distro login debian -- /bin/bash -lc "cd ~; hermes $*"
 HERMES_LAUNCHER
 chmod +x "$PREFIX/bin/hermes"
 
@@ -394,8 +412,8 @@ step 7 "Configuring Hermes"
 
 # Check if already configured
 HERMES_CONFIGURED=false
-if proot-distro login debian -- bash -c "test -f ~/.hermes/.env" 2>/dev/null; then
-    if proot-distro login debian -- bash -c "grep -q OPENROUTER_API_KEY ~/.hermes/.env" 2>/dev/null; then
+if proot-distro login debian -- /bin/sh -c "test -f ~/.hermes/.env" 2>/dev/null; then
+    if proot-distro login debian -- /bin/sh -c "grep -q OPENROUTER_API_KEY ~/.hermes/.env" 2>/dev/null; then
         HERMES_CONFIGURED=true
     fi
 fi
@@ -407,7 +425,7 @@ else
         normal)
             printf "  ${W}Starting official Hermes setup wizard...${D}\n"
             printf "\n"
-            proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes setup"
+            proot-distro login debian -- /bin/bash -lc "cd ~; hermes setup"
             ;;
         *)
             apply_quick_setup
@@ -438,5 +456,5 @@ printf "\n"
 if [ "$QUICK_SETUP_RAN" = true ]; then
     printf "  ${W}Starting Hermes chat...${D}\n"
     printf "\n"
-    proot-distro login debian -- bash -c "source ~/.bashrc 2>/dev/null; cd ~; hermes"
+    proot-distro login debian -- /bin/bash -lc "cd ~; hermes"
 fi
