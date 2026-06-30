@@ -88,12 +88,21 @@ choose_setup_mode() {
     SETUP_MODE="quick"
     QUICK_SETUP_REQUESTED=false
 
-    printf "  ${W}Choose setup mode:${D}\n"
+    clear
     printf "\n"
-    printf "    ${C}1) Quick setup${D}  ${W}OpenRouter + Telegram, recommended for mobile${D}\n"
-    printf "    ${C}2) Normal setup${D} ${W}Official Hermes setup wizard${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "  ${C}|${W}        Hermes Mobile Setup         ${C}|${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
-    printf "  ${W}Select [1]:${D} "
+    printf "  ${C}1${D}) ${W}Quick setup${D}\n"
+    printf "     ${Y}OpenRouter + Telegram${D}\n"
+    printf "     ${W}Best for this tutorial.${D}\n"
+    printf "\n"
+    printf "  ${C}2${D}) ${W}Normal setup${D}\n"
+    printf "     ${Y}Official Hermes wizard${D}\n"
+    printf "     ${W}More providers and options.${D}\n"
+    printf "\n"
+    printf "  ${W}Select setup [1]:${D} "
     read -r SETUP_MODE_INPUT
     printf "\n"
 
@@ -110,13 +119,15 @@ choose_setup_mode() {
 }
 
 collect_quick_setup() {
+    clear
     printf "\n"
-    printf "  ${C}Quick Setup: OpenRouter + Telegram${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
+    printf "  ${C}|${W}            Quick Setup             ${C}|${D}\n"
+    printf "  ${C}+---------------------------------------+${D}\n"
     printf "\n"
-    printf "  ${W}This will configure Hermes with:${D}\n"
-    printf "    ${C}Provider:${D} OpenRouter\n"
-    printf "    ${C}Model:${D}    xiaomi/mimo-v2.5\n"
-    printf "    ${C}Gateway:${D}  Telegram\n"
+    printf "  ${C}Provider${D}  OpenRouter\n"
+    printf "  ${C}Gateway${D}   Telegram\n"
+    printf "  ${C}Default${D}   xiaomi/mimo-v2.5\n"
     printf "\n"
 
     OPENROUTER_API_KEY=""
@@ -137,8 +148,9 @@ collect_quick_setup() {
     fi
 
     printf "\n"
-    printf "  ${W}Open your Telegram bot and send:${D} ${C}/start${D}\n"
-    printf "  ${W}When you are done, press Enter here. The installer will detect the chat and send a ready message at the end.${D}\n"
+    printf "  ${W}Now open your Telegram bot.${D}\n"
+    printf "  ${W}Send:${D} ${C}/start${D}\n"
+    printf "  ${W}Then return here.${D}\n"
     printf "\n"
     printf "  ${W}Press Enter to continue:${D} "
     read -r _
