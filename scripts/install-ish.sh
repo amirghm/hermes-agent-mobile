@@ -9,6 +9,10 @@ set -e
 INSTALLER_VERSION="0.16.0"
 PYTHON_DIR="$HOME/python311"
 PYTHON_BIN="$PYTHON_DIR/bin/python3.11"
+PYTHON_LIB_DIR="$PYTHON_DIR/lib"
+RELEASE="https://github.com/amirghm/hermes-agent-mobile/releases/download/v$INSTALLER_VERSION"
+LIBFFI7_RELEASE_URL="$RELEASE/libffi7-i686.tar.gz"
+LIBFFI7_APK_URL="https://dl-cdn.alpinelinux.org/alpine/v3.14/main/x86/libffi-3.3-r2.apk"
 
 download() {
     if command -v curl >/dev/null 2>&1; then
@@ -86,30 +90,44 @@ install_apk_packages() {
 }
 
 ensure_libffi_compat() {
+    mkdir -p "$PYTHON_LIB_DIR"
+
+    if [ -e "$PYTHON_LIB_DIR/libffi.so.7" ]; then
+        ok "bundled libffi.so.7 available"
+        return 0
+    fi
+
     if [ -e /usr/lib/libffi.so.7 ] || [ -e /lib/libffi.so.7 ]; then
         ok "libffi.so.7 available"
         return 0
     fi
 
-    for libffi_path in /usr/lib/libffi.so.* /lib/libffi.so.*; do
-        [ -e "$libffi_path" ] || continue
-        case "$libffi_path" in
-            *.a|*.la) continue ;;
-        esac
+    printf "  Downloading libffi.so.7 runtime...\n"
+    LIBFFI_TMP="$TMPDIR/libffi7"
+    rm -rf "$LIBFFI_TMP"
+    mkdir -p "$LIBFFI_TMP"
 
-        LIBFFI_DIR=$(dirname "$libffi_path")
-        if [ -w "$LIBFFI_DIR" ]; then
-            ln -sf "$libffi_path" "$LIBFFI_DIR/libffi.so.7" || fail "Could not create libffi.so.7 compatibility link"
-            ok "libffi.so.7 linked to $(basename "$libffi_path")"
-            return 0
-        fi
-    done
+    if download "$TMPDIR/libffi7.tar.gz" "$LIBFFI7_RELEASE_URL"; then
+        tar xzf "$TMPDIR/libffi7.tar.gz" -C "$LIBFFI_TMP" || fail "libffi.so.7 release extract failed"
+        LIBFFI_SOURCE_DIR="$LIBFFI_TMP"
+        rm -f "$TMPDIR/libffi7.tar.gz"
+    else
+        download "$TMPDIR/libffi7.apk" "$LIBFFI7_APK_URL" || fail "libffi.so.7 download failed"
+        tar xzf "$TMPDIR/libffi7.apk" -C "$LIBFFI_TMP" || fail "libffi.so.7 extract failed"
+        LIBFFI_SOURCE_DIR="$LIBFFI_TMP/usr/lib"
+        rm -f "$TMPDIR/libffi7.apk"
+    fi
 
-    fail "libffi runtime missing. Try: apk add --no-cache libffi"
+    [ -e "$LIBFFI_SOURCE_DIR/libffi.so.7" ] || fail "libffi.so.7 not found in package"
+    cp -f "$LIBFFI_SOURCE_DIR/libffi.so.7"* "$PYTHON_LIB_DIR/" || fail "libffi.so.7 copy failed"
+    rm -rf "$LIBFFI_TMP"
+
+    [ -e "$PYTHON_LIB_DIR/libffi.so.7" ] || fail "Bundled libffi.so.7 install failed"
+    ok "bundled libffi.so.7 installed"
 }
 
 verify_python_runtime() {
-    "$PYTHON_BIN" -c "import ctypes, ssl, sqlite3, zlib" 2>/dev/null || fail "Python runtime library check failed"
+    LD_LIBRARY_PATH="$PYTHON_LIB_DIR:${LD_LIBRARY_PATH:-}" "$PYTHON_BIN" -c "import ctypes, ssl, sqlite3, zlib" 2>/dev/null || fail "Python runtime library check failed"
     ok "Python runtime libraries verified"
 }
 
@@ -120,6 +138,7 @@ create_launchers() {
 #!/bin/sh
 HERMES_PY="$HOME/python311/bin/python3.11"
 export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/python311/lib:${LD_LIBRARY_PATH:-}"
 exec "$HERMES_PY" -m hermes_cli.main "$@"
 HERMES_LAUNCHER
     chmod +x "$PYTHON_DIR/bin/hermes"
@@ -279,6 +298,9 @@ CONFIG_EOF
 
 header
 
+TMPDIR="$HOME/tmp/hermes-install-$$"
+mkdir -p "$TMPDIR"
+
 if grep -qi 'alpine' /etc/os-release 2>/dev/null; then
     ok "Running in iSH (Alpine Linux)"
 else
@@ -293,10 +315,6 @@ ensure_libffi_compat
 
 # Step 2: Install Hermes
 step 2 "Installing Hermes-Agent"
-
-RELEASE="https://github.com/amirghm/hermes-agent-mobile/releases/download/v$INSTALLER_VERSION"
-TMPDIR="$HOME/tmp/hermes-install-$$"
-mkdir -p "$TMPDIR"
 
 if [ -x "$PYTHON_BIN" ]; then
     ok "Python 3.11 already installed"
@@ -316,6 +334,7 @@ fi
 verify_python_runtime
 
 export PATH="$PYTHON_DIR/bin:/usr/bin:/bin:$PATH"
+export LD_LIBRARY_PATH="$PYTHON_LIB_DIR:${LD_LIBRARY_PATH:-}"
 
 if "$PYTHON_BIN" -c "import hermes_cli" 2>/dev/null; then
     ok "Hermes already installed"
