@@ -221,6 +221,10 @@ from pathlib import Path
 
 site_dir = Path(site.getsitepackages()[0])
 dep_ensure = site_dir / "hermes_cli" / "dep_ensure.py"
+jiter_preload = site_dir / "agent" / "jiter_preload.py"
+streaming_parser = site_dir / "openai" / "lib" / "streaming" / "chat" / "_completions.py"
+conversation_loop = site_dir / "agent" / "conversation_loop.py"
+gateway_run = site_dir / "gateway" / "run.py"
 
 if dep_ensure.exists():
     text = dep_ensure.read_text(encoding="utf-8")
@@ -234,6 +238,62 @@ if dep_ensure.exists():
     )
     if marker in text and "HERMES_ISH_MODE" not in text:
         dep_ensure.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+
+if jiter_preload.exists():
+    text = jiter_preload.read_text(encoding="utf-8")
+    if "import os" not in text:
+        text = text.replace("import importlib\n", "import importlib\nimport os\n")
+    marker = "def preload_jiter_native_extension() -> bool:\n"
+    patch = (
+        marker
+        + '    if os.environ.get("HERMES_ISH_MODE") == "1":\n'
+        + "        return False\n\n"
+    )
+    if marker in text and "HERMES_ISH_MODE" not in text:
+        jiter_preload.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+
+if streaming_parser.exists():
+    text = streaming_parser.read_text(encoding="utf-8")
+    marker = "from jiter import from_json\n"
+    patch = (
+        "import json\n"
+        "import os\n\n"
+        "try:\n"
+        '    if os.environ.get("HERMES_ISH_MODE") == "1":\n'
+        '        raise ImportError("Disable jiter on iSH")\n'
+        "    from jiter import from_json\n"
+        "except Exception:\n"
+        "    def from_json(data, *, partial_mode=False):\n"
+        '        if isinstance(data, bytes):\n'
+        '            data = data.decode("utf-8", errors="ignore")\n'
+        "        return json.loads(data)\n"
+    )
+    if marker in text and 'Disable jiter on iSH' not in text:
+        streaming_parser.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+
+if conversation_loop.exists():
+    text = conversation_loop.read_text(encoding="utf-8")
+    marker = "            elif not agent._has_stream_consumers() and agent._should_start_quiet_spinner():\n"
+    patch = (
+        '            elif os.environ.get("HERMES_ISH_MODE") != "1" and not agent._has_stream_consumers() and agent._should_start_quiet_spinner():\n'
+    )
+    if marker in text and "HERMES_ISH_MODE" not in text:
+        conversation_loop.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+
+if gateway_run.exists():
+    text = gateway_run.read_text(encoding="utf-8")
+    marker = (
+        "            _want_stream_deltas = _streaming_enabled\n"
+        "            _want_interim_messages = interim_assistant_messages_enabled\n"
+    )
+    patch = (
+        marker
+        + '            if os.environ.get("HERMES_ISH_MODE") == "1":\n'
+        + "                _want_stream_deltas = False\n"
+        + '                _want_interim_messages = False\n'
+    )
+    if marker in text and "HERMES_ISH_MODE" not in text:
+        gateway_run.write_text(text.replace(marker, patch, 1), encoding="utf-8")
 PY
     ok "iSH runtime compatibility patches applied"
 }
