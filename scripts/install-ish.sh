@@ -70,7 +70,7 @@ install_apk_packages() {
     printf "  Updating apk package index...\n"
     apk update >/dev/null || fail "apk update failed"
 
-    for pkg in curl wget bash ca-certificates libffi openssl sqlite-libs zlib; do
+    for pkg in curl wget bash ca-certificates libffi libgcc libstdc++ openssl sqlite-libs zlib; do
         if apk info -e "$pkg" >/dev/null 2>&1; then
             if apk version -q -l '<' "$pkg" 2>/dev/null | grep -q .; then
                 printf "  Updating: %s\n" "$pkg"
@@ -207,6 +207,11 @@ PY
 
     "$PYTHON_BIN" -c "import importlib.metadata as md; md.version('prompt_toolkit'); md.version('hermes-agent'); import prompt_toolkit" 2>/dev/null || fail "Python package metadata repair failed"
     ok "Python package metadata verified"
+}
+
+verify_hermes_native_modules() {
+    LD_LIBRARY_PATH="$PYTHON_LIB_DIR:${LD_LIBRARY_PATH:-}" "$PYTHON_BIN" -c "import pydantic_core" 2>/dev/null || fail "pydantic-core native library check failed"
+    ok "Hermes native Python modules verified"
 }
 
 patch_ish_runtime_compat() {
@@ -462,6 +467,7 @@ else
 fi
 
 repair_python_metadata
+verify_hermes_native_modules
 patch_ish_runtime_compat
 
 if "$PYTHON_BIN" -c "import jiter" 2>/dev/null; then
