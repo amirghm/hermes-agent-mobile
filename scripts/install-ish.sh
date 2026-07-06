@@ -28,17 +28,17 @@ download() {
 header() {
     clear
     printf "\n"
-    printf "  +---------------------------------------+\n"
-    printf "  | _   _                                |\n"
-    printf "  || | | | ___ _ __ _ __ ___   ___  ___  |\n"
-    printf "  || |_| |/ _ \\ '__| '_ \` _ \\ / _ \\/ __| |\n"
-    printf "  ||  _  |  __/ |  | | | | | |  __/\\__ \\ |\n"
-    printf "  ||_| |_|\\___|_|  |_| |_| |_\\___||___/ |\n"
-    printf "  |                                       |\n"
-    printf "  |  Mobile Installer v0.16.0             |\n"
-    printf "  |  by NousResearch                      |\n"
-    printf "  |  wrote by @amirghm                    |\n"
-    printf "  +---------------------------------------+\n"
+    printf "  +-----------------------------------+\n"
+    printf "  |  _   _                            |\n"
+    printf "  | | | | | ___ _ __ _ __ ___   ___  |\n"
+    printf "  | | |_| |/ _ \\ '__| '_ \` _ \\ / _ \\ |\n"
+    printf "  | |  _  |  __/ |  | | | | | |  __/ |\n"
+    printf "  | |_| |_|\\___|_|  |_| |_| |_|\\___| |\n"
+    printf "  |                                   |\n"
+    printf "  |  Hermes Mobile Installer          |\n"
+    printf "  |  v%-32s|\n" "$INSTALLER_VERSION"
+    printf "  |  by NousResearch / @amirghm        |\n"
+    printf "  +-----------------------------------+\n"
     printf "\n"
 }
 
