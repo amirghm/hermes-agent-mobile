@@ -120,7 +120,7 @@ During setup you can choose:
 ### 🍎 iOS (iSH)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-ish.sh -o /tmp/install.sh && sh /tmp/install.sh
+apk update && apk add --no-cache curl && curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-ish.sh -o /tmp/install.sh && sh /tmp/install.sh
 ```
 
 For iSH, configure manually after install:

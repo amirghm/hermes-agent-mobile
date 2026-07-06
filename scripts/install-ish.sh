@@ -44,6 +44,27 @@ ok()   { printf "  [ok] $1\n"; }
 warn() { printf "  [!] $1\n"; }
 fail() { printf "  [x] $1\n"; exit 1; }
 
+install_apk_packages() {
+    if ! command -v apk >/dev/null 2>&1; then
+        fail "apk not found. This installer requires iSH/Alpine Linux."
+    fi
+
+    printf "  Updating apk package index...\n"
+    apk update >/dev/null || fail "apk update failed"
+
+    printf "  Installing: curl, wget, bash, ca-certificates\n"
+    apk add --no-cache curl wget bash ca-certificates >/dev/null || fail "apk add failed"
+
+    command -v curl >/dev/null 2>&1 || fail "curl was not installed"
+    command -v wget >/dev/null 2>&1 || fail "wget was not installed"
+    command -v bash >/dev/null 2>&1 || fail "bash was not installed"
+
+    ok "curl installed"
+    ok "wget installed"
+    ok "bash installed"
+    ok "ca-certificates installed"
+}
+
 header
 
 if grep -qi 'alpine' /etc/os-release 2>/dev/null; then
@@ -55,15 +76,7 @@ fi
 # Step 1: Dependencies
 step 1 "Installing dependencies"
 
-printf "  Installing: curl, wget, bash\n"
-printf "\n"
-
-apk update > /dev/null 2>&1 || true
-apk add --no-cache curl wget bash > /dev/null 2>&1 || true
-
-ok "curl installed"
-ok "wget installed"
-ok "bash installed"
+install_apk_packages
 
 # Step 2: Install Hermes
 step 2 "Installing Hermes-Agent"
@@ -79,6 +92,8 @@ else
     printf "  This takes a minute on mobile data...\n"
     download "$TMPDIR/python311.tar.gz" "$RELEASE/python311-i686.tar.gz" || fail "Download failed"
     cd "$TMPDIR" && tar xzf python311.tar.gz
+    [ -d "$TMPDIR/python311" ] || fail "Python archive did not contain python311"
+    mkdir -p "$HOME/python311"
     cp -rf "$TMPDIR/python311/"* "$HOME/python311/"
     rm -rf "$TMPDIR/python311" "$TMPDIR/python311.tar.gz"
     ok "Python 3.11 installed"
