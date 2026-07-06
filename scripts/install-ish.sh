@@ -131,6 +131,84 @@ verify_python_runtime() {
     ok "Python runtime libraries verified"
 }
 
+repair_python_metadata() {
+    "$PYTHON_BIN" - << 'PY'
+import importlib.metadata as md
+import re
+import site
+from pathlib import Path
+
+site_dir = Path(site.getsitepackages()[0])
+
+packages = [
+    ("hermes-agent", "0.16.0", "hermes_cli"),
+    ("prompt_toolkit", "3.0.52", "prompt_toolkit"),
+    ("websockets", "16.0", "websockets"),
+    ("tqdm", "4.67.1", "tqdm"),
+    ("click", "8.3.1", "click"),
+    ("pydantic", "2.13.4", "pydantic"),
+    ("pydantic-core", "2.46.4", "pydantic_core"),
+    ("openai", "2.24.0", "openai"),
+    ("fastapi", "0.136.3", "fastapi"),
+    ("starlette", "1.2.1", "starlette"),
+    ("uvicorn", "0.49.0", "uvicorn"),
+    ("httpx", "0.28.1", "httpx"),
+    ("httpcore", "1.0.9", "httpcore"),
+    ("h11", "0.16.0", "h11"),
+    ("requests", "2.33.0", "requests"),
+    ("urllib3", "2.7.0", "urllib3"),
+    ("certifi", "2026.5.20", "certifi"),
+    ("charset-normalizer", "3.4.7", "charset_normalizer"),
+    ("idna", "3.18", "idna"),
+    ("rich", "14.2.0", "rich"),
+    ("Pygments", "2.20.0", "pygments"),
+    ("markdown-it-py", "4.2.0", "markdown_it"),
+    ("mdurl", "0.1.2", "mdurl"),
+    ("wcwidth", "0.8.0", "wcwidth"),
+    ("sniffio", "1.3.1", "sniffio"),
+    ("annotated-types", "0.7.0", "annotated_types"),
+    ("distro", "1.9.0", "distro"),
+    ("Jinja2", "3.1.6", "jinja2"),
+    ("httptools", "0.8.0", "httptools"),
+    ("python-dateutil", "2.9.0.post0", "dateutil"),
+    ("python-dotenv", "1.2.1", "dotenv"),
+    ("pathspec", "0.12.1", "pathspec"),
+    ("watchfiles", "1.1.1", "watchfiles"),
+    ("uvloop", "0.22.1", "uvloop"),
+    ("jiter", "0.12.0", "jiter"),
+]
+
+def dist_info_dir(name: str, version: str) -> Path:
+    safe_name = re.sub(r"[-_.]+", "_", name).strip("_")
+    safe_version = re.sub(r"[^A-Za-z0-9_.!+-]+", "_", version)
+    return site_dir / f"{safe_name}-{safe_version}.dist-info"
+
+for name, version, marker in packages:
+    if not (site_dir / marker).exists() and not any(site_dir.glob(marker + "*.so")):
+        continue
+    try:
+        md.version(name)
+        continue
+    except md.PackageNotFoundError:
+        pass
+
+    info_dir = dist_info_dir(name, version)
+    info_dir.mkdir(parents=True, exist_ok=True)
+    (info_dir / "METADATA").write_text(
+        f"Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n",
+        encoding="utf-8",
+    )
+    (info_dir / "WHEEL").write_text(
+        "Wheel-Version: 1.0\nGenerator: hermes-mobile-installer\nRoot-Is-Purelib: true\nTag: py3-none-any\n",
+        encoding="utf-8",
+    )
+    (info_dir / "RECORD").write_text("", encoding="utf-8")
+PY
+
+    "$PYTHON_BIN" -c "import importlib.metadata as md; md.version('prompt_toolkit'); md.version('hermes-agent'); import prompt_toolkit" 2>/dev/null || fail "Python package metadata repair failed"
+    ok "Python package metadata verified"
+}
+
 create_launchers() {
     mkdir -p "$PYTHON_DIR/bin"
 
@@ -356,6 +434,8 @@ else
     rm -rf "$TMPDIR/hermes.tar.gz" "$HERMES_EXTRACT"
     ok "Hermes-Agent installed"
 fi
+
+repair_python_metadata
 
 if "$PYTHON_BIN" -c "import jiter" 2>/dev/null; then
     ok "jiter already installed"
