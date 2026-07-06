@@ -265,11 +265,19 @@ if python3.11 -c "import hermes_cli" 2>/dev/null; then
 else
     printf "  Downloading Hermes-Agent (22MB)...\n"
     download "$TMPDIR/hermes.tar.gz" "$RELEASE/hermes-ish-v6.tar.gz" || fail "Download failed"
-    cd "$TMPDIR" && tar xzf hermes.tar.gz
+    HERMES_EXTRACT="$TMPDIR/hermes-pkg"
+    rm -rf "$HERMES_EXTRACT"
+    mkdir -p "$HERMES_EXTRACT"
+    tar xzf "$TMPDIR/hermes.tar.gz" -C "$HERMES_EXTRACT"
     SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
-    cp -rf "$TMPDIR/usr/"* "$SITE/" 2>/dev/null || true
+    if [ -d "$HERMES_EXTRACT/usr" ]; then
+        cp -rf "$HERMES_EXTRACT/usr/"* "$SITE/" || fail "Hermes copy failed"
+    else
+        cp -rf "$HERMES_EXTRACT/"* "$SITE/" || fail "Hermes copy failed"
+    fi
     rm -f "$SITE/tools/memory_tool.py" 2>/dev/null || true
-    rm -rf "$TMPDIR/hermes.tar.gz" "$TMPDIR/usr"
+    python3.11 -c "import hermes_cli" 2>/dev/null || fail "Hermes import check failed"
+    rm -rf "$TMPDIR/hermes.tar.gz" "$HERMES_EXTRACT"
     ok "Hermes-Agent installed"
 fi
 
