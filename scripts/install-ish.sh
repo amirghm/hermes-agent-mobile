@@ -28,17 +28,17 @@ download() {
 header() {
     clear
     printf "\n"
-    printf "  +-----------------------------------+\n"
-    printf "  |  _   _                            |\n"
-    printf "  | | | | | ___ _ __ _ __ ___   ___  |\n"
-    printf "  | | |_| |/ _ \\ '__| '_ \` _ \\ / _ \\ |\n"
-    printf "  | |  _  |  __/ |  | | | | | |  __/ |\n"
-    printf "  | |_| |_|\\___|_|  |_| |_| |_|\\___| |\n"
-    printf "  |                                   |\n"
-    printf "  |  Hermes Mobile Installer          |\n"
-    printf "  |  v%-32s|\n" "$INSTALLER_VERSION"
-    printf "  |  by NousResearch / @amirghm        |\n"
-    printf "  +-----------------------------------+\n"
+    printf "  +-------------------------------------------+\n"
+    printf "  |  %-39s  |\n" " _   _"
+    printf "  |  %-39s  |\n" "| | | | ___ _ __ _ __ ___   ___  ___"
+    printf "  |  %-39s  |\n" "| |_| |/ _ \\ '__| '_ \` _ \\ / _ \\/ __|"
+    printf "  |  %-39s  |\n" "|  _  |  __/ |  | | | | | |  __/\\__ \\"
+    printf "  |  %-39s  |\n" "|_| |_|\\___|_|  |_| |_| |_|\\___||___/"
+    printf "  |  %-39s  |\n" ""
+    printf "  |  %-39s  |\n" "Hermes Mobile Installer"
+    printf "  |  v%-38s  |\n" "$INSTALLER_VERSION"
+    printf "  |  %-39s  |\n" "by NousResearch / @amirghm"
+    printf "  +-------------------------------------------+\n"
     printf "\n"
 }
 
