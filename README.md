@@ -85,7 +85,7 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Chat / CLI mode | ✅ | Via hermes-agent --prompt |
+| Chat / CLI mode | ✅ | Via `hermes --prompt` |
 | Telegram Gateway | ❌ | iSH lacks subprocess syscalls |
 | Voice input (STT) | ❌ | Requires gateway mode |
 | Voice output (TTS) | ❌ | Requires gateway mode |
@@ -123,7 +123,12 @@ During setup you can choose:
 apk update && apk add --no-cache curl && curl -fsSL https://raw.githubusercontent.com/amirghm/hermes-agent-mobile/main/scripts/install-ish.sh -o /tmp/install.sh && sh /tmp/install.sh
 ```
 
-For iSH, configure manually after install:
+During setup you can choose the same flow as Android:
+
+- **Quick setup** - enter your OpenRouter API key, optional Telegram bot token, and model. The installer writes `~/.hermes/.env` and `~/.hermes/config.yaml`.
+- **Normal setup** - run the official Hermes setup wizard for custom providers, models, gateways, and advanced options.
+
+For iSH, you can also edit config manually after install:
 
 ```sh
 nano ~/.hermes/.env
@@ -134,6 +139,10 @@ Add your OpenRouter API key (get one free at https://openrouter.ai):
 ```
 OPENROUTER_API_KEY=sk-or-...
 ```
+
+- `hermes` - Start Hermes chat
+- `hermes setup` - Configure API key & model
+- `hermes gateway` - Start Telegram/messaging gateway if supported by your iSH session
 
 ## Requirements
 
