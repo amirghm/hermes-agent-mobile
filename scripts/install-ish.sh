@@ -66,7 +66,7 @@ install_apk_packages() {
     printf "  Updating apk package index...\n"
     apk update >/dev/null || fail "apk update failed"
 
-    for pkg in curl wget bash ca-certificates; do
+    for pkg in curl wget bash ca-certificates libffi openssl sqlite-libs zlib; do
         if apk info -e "$pkg" >/dev/null 2>&1; then
             if apk version -q -l '<' "$pkg" 2>/dev/null | grep -q .; then
                 printf "  Updating: %s\n" "$pkg"
@@ -83,6 +83,34 @@ install_apk_packages() {
     command -v curl >/dev/null 2>&1 || fail "curl was not installed"
     command -v wget >/dev/null 2>&1 || fail "wget was not installed"
     command -v bash >/dev/null 2>&1 || fail "bash was not installed"
+}
+
+ensure_libffi_compat() {
+    if [ -e /usr/lib/libffi.so.7 ] || [ -e /lib/libffi.so.7 ]; then
+        ok "libffi.so.7 available"
+        return 0
+    fi
+
+    for libffi_path in /usr/lib/libffi.so.* /lib/libffi.so.*; do
+        [ -e "$libffi_path" ] || continue
+        case "$libffi_path" in
+            *.a|*.la) continue ;;
+        esac
+
+        LIBFFI_DIR=$(dirname "$libffi_path")
+        if [ -w "$LIBFFI_DIR" ]; then
+            ln -sf "$libffi_path" "$LIBFFI_DIR/libffi.so.7" || fail "Could not create libffi.so.7 compatibility link"
+            ok "libffi.so.7 linked to $(basename "$libffi_path")"
+            return 0
+        fi
+    done
+
+    fail "libffi runtime missing. Try: apk add --no-cache libffi"
+}
+
+verify_python_runtime() {
+    "$PYTHON_BIN" -c "import ctypes, ssl, sqlite3, zlib" 2>/dev/null || fail "Python runtime library check failed"
+    ok "Python runtime libraries verified"
 }
 
 create_launchers() {
@@ -261,6 +289,7 @@ fi
 step 1 "Installing dependencies"
 
 install_apk_packages
+ensure_libffi_compat
 
 # Step 2: Install Hermes
 step 2 "Installing Hermes-Agent"
@@ -283,6 +312,8 @@ else
     rm -rf "$TMPDIR/python311" "$TMPDIR/python311.tar.gz"
     ok "Python 3.11 installed"
 fi
+
+verify_python_runtime
 
 export PATH="$PYTHON_DIR/bin:/usr/bin:/bin:$PATH"
 
