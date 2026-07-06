@@ -6,6 +6,10 @@
 
 set -e
 
+INSTALLER_VERSION="0.16.0"
+PYTHON_DIR="$HOME/python311"
+PYTHON_BIN="$PYTHON_DIR/bin/python3.11"
+
 download() {
     if command -v curl >/dev/null 2>&1; then
         curl -fSL -o "$1" "$2" 2>/dev/null
@@ -62,35 +66,56 @@ install_apk_packages() {
     printf "  Updating apk package index...\n"
     apk update >/dev/null || fail "apk update failed"
 
-    printf "  Installing: curl, wget, bash, ca-certificates\n"
-    apk add --no-cache curl wget bash ca-certificates >/dev/null || fail "apk add failed"
+    for pkg in curl wget bash ca-certificates; do
+        if apk info -e "$pkg" >/dev/null 2>&1; then
+            if apk version -q -l '<' "$pkg" 2>/dev/null | grep -q .; then
+                printf "  Updating: %s\n" "$pkg"
+                apk add --no-cache --upgrade "$pkg" >/dev/null || fail "apk update failed for $pkg"
+            else
+                ok "$pkg already installed"
+            fi
+        else
+            printf "  Installing: %s\n" "$pkg"
+            apk add --no-cache "$pkg" >/dev/null || fail "apk install failed for $pkg"
+        fi
+    done
 
     command -v curl >/dev/null 2>&1 || fail "curl was not installed"
     command -v wget >/dev/null 2>&1 || fail "wget was not installed"
     command -v bash >/dev/null 2>&1 || fail "bash was not installed"
-
-    ok "curl installed"
-    ok "wget installed"
-    ok "bash installed"
-    ok "ca-certificates installed"
 }
 
 create_launchers() {
-    mkdir -p "$HOME/python311/bin"
+    mkdir -p "$PYTHON_DIR/bin"
 
-    cat > "$HOME/python311/bin/hermes" << 'HERMES_LAUNCHER'
+    cat > "$PYTHON_DIR/bin/hermes" << 'HERMES_LAUNCHER'
 #!/bin/sh
 HERMES_PY="$HOME/python311/bin/python3.11"
 export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
 exec "$HERMES_PY" -m hermes_cli.main "$@"
 HERMES_LAUNCHER
-    chmod +x "$HOME/python311/bin/hermes"
+    chmod +x "$PYTHON_DIR/bin/hermes"
 
-    cat > "$HOME/python311/bin/hermes-agent" << 'HERMES_AGENT_LAUNCHER'
+    cat > "$PYTHON_DIR/bin/hermes-agent" << 'HERMES_AGENT_LAUNCHER'
 #!/bin/sh
 exec "$HOME/python311/bin/hermes" "$@"
 HERMES_AGENT_LAUNCHER
-    chmod +x "$HOME/python311/bin/hermes-agent"
+    chmod +x "$PYTHON_DIR/bin/hermes-agent"
+
+    INSTALLED_GLOBAL_LAUNCHER=false
+    for bin_dir in /usr/local/bin /usr/bin; do
+        if [ -d "$bin_dir" ] && [ -w "$bin_dir" ]; then
+            cp "$PYTHON_DIR/bin/hermes" "$bin_dir/hermes" || fail "Could not install $bin_dir/hermes"
+            cp "$PYTHON_DIR/bin/hermes-agent" "$bin_dir/hermes-agent" || fail "Could not install $bin_dir/hermes-agent"
+            chmod +x "$bin_dir/hermes" "$bin_dir/hermes-agent"
+            ok "Hermes launchers installed in $bin_dir"
+            INSTALLED_GLOBAL_LAUNCHER=true
+        fi
+    done
+
+    if [ "$INSTALLED_GLOBAL_LAUNCHER" = false ]; then
+        warn "Could not install global launcher; use: $PYTHON_DIR/bin/hermes"
+    fi
 }
 
 existing_hermes_value() {
@@ -240,11 +265,11 @@ install_apk_packages
 # Step 2: Install Hermes
 step 2 "Installing Hermes-Agent"
 
-RELEASE="https://github.com/amirghm/hermes-agent-mobile/releases/download/v0.16.0"
+RELEASE="https://github.com/amirghm/hermes-agent-mobile/releases/download/v$INSTALLER_VERSION"
 TMPDIR="$HOME/tmp/hermes-install-$$"
 mkdir -p "$TMPDIR"
 
-if command -v python3.11 >/dev/null 2>&1; then
+if [ -x "$PYTHON_BIN" ]; then
     ok "Python 3.11 already installed"
 else
     printf "  Downloading Python 3.11 (100MB)...\n"
@@ -252,15 +277,16 @@ else
     download "$TMPDIR/python311.tar.gz" "$RELEASE/python311-i686.tar.gz" || fail "Download failed"
     cd "$TMPDIR" && tar xzf python311.tar.gz
     [ -d "$TMPDIR/python311" ] || fail "Python archive did not contain python311"
-    mkdir -p "$HOME/python311"
-    cp -rf "$TMPDIR/python311/"* "$HOME/python311/"
+    mkdir -p "$PYTHON_DIR"
+    cp -rf "$TMPDIR/python311/"* "$PYTHON_DIR/"
+    [ -x "$PYTHON_BIN" ] || fail "Python install check failed"
     rm -rf "$TMPDIR/python311" "$TMPDIR/python311.tar.gz"
     ok "Python 3.11 installed"
 fi
 
-export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
+export PATH="$PYTHON_DIR/bin:/usr/bin:/bin:$PATH"
 
-if python3.11 -c "import hermes_cli" 2>/dev/null; then
+if "$PYTHON_BIN" -c "import hermes_cli" 2>/dev/null; then
     ok "Hermes already installed"
 else
     printf "  Downloading Hermes-Agent (22MB)...\n"
@@ -269,25 +295,25 @@ else
     rm -rf "$HERMES_EXTRACT"
     mkdir -p "$HERMES_EXTRACT"
     tar xzf "$TMPDIR/hermes.tar.gz" -C "$HERMES_EXTRACT"
-    SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
+    SITE=$("$PYTHON_BIN" -c "import site; print(site.getsitepackages()[0])")
     if [ -d "$HERMES_EXTRACT/usr" ]; then
         cp -rf "$HERMES_EXTRACT/usr/"* "$SITE/" || fail "Hermes copy failed"
     else
         cp -rf "$HERMES_EXTRACT/"* "$SITE/" || fail "Hermes copy failed"
     fi
     rm -f "$SITE/tools/memory_tool.py" 2>/dev/null || true
-    python3.11 -c "import hermes_cli" 2>/dev/null || fail "Hermes import check failed"
+    "$PYTHON_BIN" -c "import hermes_cli" 2>/dev/null || fail "Hermes import check failed"
     rm -rf "$TMPDIR/hermes.tar.gz" "$HERMES_EXTRACT"
     ok "Hermes-Agent installed"
 fi
 
-if python3.11 -c "import jiter" 2>/dev/null; then
+if "$PYTHON_BIN" -c "import jiter" 2>/dev/null; then
     ok "jiter already installed"
 else
     printf "  Downloading jiter...\n"
     download "$TMPDIR/jiter.tar.gz" "$RELEASE/jiter-i686.tar.gz" || fail "Download failed"
     cd "$TMPDIR" && tar xzf jiter.tar.gz
-    SITE=$(python3.11 -c "import site; print(site.getsitepackages()[0])")
+    SITE=$("$PYTHON_BIN" -c "import site; print(site.getsitepackages()[0])")
     for f in "$TMPDIR"/jiter* "$TMPDIR"/_jiter*; do
         [ -e "$f" ] && cp -rf "$f" "$SITE/" 2>/dev/null
     done
