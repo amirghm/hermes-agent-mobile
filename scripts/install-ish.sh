@@ -291,6 +291,14 @@ existing_hermes_value() {
     esac
 }
 
+model_context_length() {
+    case "$1" in
+        xiaomi/mimo-v2.5|xiaomi/mimo-v2.5-pro)
+            printf "1048576"
+            ;;
+    esac
+}
+
 choose_setup_mode() {
     SETUP_MODE="quick"
 
@@ -368,6 +376,10 @@ collect_quick_setup() {
     ask "Model:" MODEL_INPUT
     MODEL_INPUT="$(trim_spaces "$MODEL_INPUT")"
     [ -n "$MODEL_INPUT" ] && MODEL_NAME="$MODEL_INPUT"
+    MODEL_CONTEXT_LENGTH="$(model_context_length "$MODEL_NAME")"
+    if [ -n "$MODEL_CONTEXT_LENGTH" ]; then
+        ok "Using ${MODEL_CONTEXT_LENGTH} token context for $MODEL_NAME"
+    fi
 
     printf "\n"
     warn "iSH can run Hermes chat, but long-running gateway/background behavior may be limited by iOS/iSH."
@@ -392,12 +404,16 @@ apply_quick_setup() {
     rm -f "$TMP_ENV"
     chmod 600 "$ENV_FILE"
 
+    CONFIG_CONTEXT_LINE=""
+    [ -n "${MODEL_CONTEXT_LENGTH:-}" ] && CONFIG_CONTEXT_LINE="  context_length: ${MODEL_CONTEXT_LENGTH}"
+
     cat > "$CONFIG_FILE" << CONFIG_EOF
 model:
   default: ${MODEL_NAME}
   provider: openrouter
   base_url: https://openrouter.ai/api/v1
   api_mode: chat_completions
+${CONFIG_CONTEXT_LINE}
 agent:
   max_turns: 10
 CONFIG_EOF
