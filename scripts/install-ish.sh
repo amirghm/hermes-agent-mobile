@@ -209,6 +209,30 @@ PY
     ok "Python package metadata verified"
 }
 
+patch_ish_runtime_compat() {
+    "$PYTHON_BIN" - << 'PY'
+import site
+from pathlib import Path
+
+site_dir = Path(site.getsitepackages()[0])
+dep_ensure = site_dir / "hermes_cli" / "dep_ensure.py"
+
+if dep_ensure.exists():
+    text = dep_ensure.read_text(encoding="utf-8")
+    marker = '    """Ensure a non-Python dependency is available. Returns True if available."""\n'
+    patch = (
+        marker
+        + '    if os.environ.get("HERMES_ISH_MODE") == "1" and dep in {"node", "browser"}:\n'
+        + '        if interactive:\n'
+        + '            print("  Skipping browser/Node bootstrap on iSH; use text tools or external browser services.")\n'
+        + '        return False\n'
+    )
+    if marker in text and "HERMES_ISH_MODE" not in text:
+        dep_ensure.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+PY
+    ok "iSH runtime compatibility patches applied"
+}
+
 create_launchers() {
     mkdir -p "$PYTHON_DIR/bin"
 
@@ -217,6 +241,8 @@ create_launchers() {
 HERMES_PY="$HOME/python311/bin/python3.11"
 export PATH="$HOME/python311/bin:/usr/bin:/bin:$PATH"
 export LD_LIBRARY_PATH="$HOME/python311/lib:${LD_LIBRARY_PATH:-}"
+export HERMES_ISH_MODE=1
+export HERMES_SKIP_NODE_BOOTSTRAP=1
 exec "$HERMES_PY" -m hermes_cli.main "$@"
 HERMES_LAUNCHER
     chmod +x "$PYTHON_DIR/bin/hermes"
@@ -436,6 +462,7 @@ else
 fi
 
 repair_python_metadata
+patch_ish_runtime_compat
 
 if "$PYTHON_BIN" -c "import jiter" 2>/dev/null; then
     ok "jiter already installed"
@@ -504,9 +531,9 @@ printf "    nano ~/.hermes/config.yaml\n"
 printf "\n"
 printf "  Docs: https://hermes-agent.nousresearch.com\n"
 printf "\n"
-
-if [ "$SETUP_MODE" = "quick" ]; then
-    printf "  Starting Hermes chat...\n"
-    printf "\n"
-    exec hermes
-fi
+printf "  iSH tip: start with one-shot prompts first:\n"
+printf "\n"
+printf "    hermes --prompt \"Hello\"\n"
+printf "\n"
+printf "  Full interactive chat may hit iSH syscall limits.\n"
+printf "\n"

@@ -86,7 +86,9 @@ Generate blog posts, social media content, scripts. Have agents collaborate on b
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Chat / CLI mode | ✅ | Via `hermes --prompt` |
+| Full interactive chat | ⚠️ | May hit iSH syscall limits |
 | Telegram Gateway | ❌ | iSH lacks subprocess syscalls |
+| Local browser tools | ❌ | iSH 32-bit Alpine cannot run the Node/Chromium stack |
 | Voice input (STT) | ❌ | Requires gateway mode |
 | Voice output (TTS) | ❌ | Requires gateway mode |
 | Memory | ✅ | Persistent across sessions |
@@ -128,6 +130,14 @@ During setup you can choose the same flow as Android:
 - **Quick setup** - enter your OpenRouter API key, optional Telegram bot token, and model. The installer writes `~/.hermes/.env` and `~/.hermes/config.yaml`.
 - **Normal setup** - run the official Hermes setup wizard for custom providers, models, gateways, and advanced options.
 
+On iSH, start with one-shot prompts:
+
+```sh
+hermes --prompt "Hello"
+```
+
+The installer disables Node/browser bootstrap on iSH. Full interactive chat may still hit iSH syscall limits, so `--prompt` mode is the reliable first path.
+
 For iSH, you can also edit config manually after install:
 
 ```sh
@@ -140,9 +150,10 @@ Add your OpenRouter API key (get one free at https://openrouter.ai):
 OPENROUTER_API_KEY=sk-or-...
 ```
 
-- `hermes` - Start Hermes chat
+- `hermes --prompt "..."` - Run a one-shot prompt
+- `hermes` - Start full interactive chat, if your iSH build supports it
 - `hermes setup` - Configure API key & model
-- `hermes gateway` - Start Telegram/messaging gateway if supported by your iSH session
+- `hermes gateway` - Not recommended on iSH because gateway/background subprocesses are limited
 
 ## Requirements
 
