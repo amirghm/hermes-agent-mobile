@@ -245,6 +245,7 @@ from pathlib import Path
 
 site_dir = Path(site.getsitepackages()[0])
 dep_ensure = site_dir / "hermes_cli" / "dep_ensure.py"
+agent_init = site_dir / "agent" / "agent_init.py"
 jiter_preload = site_dir / "agent" / "jiter_preload.py"
 streaming_parser = site_dir / "openai" / "lib" / "streaming" / "chat" / "_completions.py"
 conversation_loop = site_dir / "agent" / "conversation_loop.py"
@@ -262,6 +263,17 @@ if dep_ensure.exists():
     )
     if marker in text and "HERMES_ISH_MODE" not in text:
         dep_ensure.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+
+if agent_init.exists():
+    text = agent_init.read_text(encoding="utf-8")
+    marker = "    agent._api_max_retries = _api_retries\n"
+    patch = (
+        '    if os.environ.get("HERMES_ISH_MODE") == "1" and _api_retries > 1:\n'
+        "        _api_retries = 1\n"
+        + marker
+    )
+    if marker in text and "HERMES_ISH_MODE" not in text:
+        agent_init.write_text(text.replace(marker, patch, 1), encoding="utf-8")
 
 if jiter_preload.exists():
     text = jiter_preload.read_text(encoding="utf-8")
@@ -302,7 +314,29 @@ if conversation_loop.exists():
         '            elif os.environ.get("HERMES_ISH_MODE") != "1" and not agent._has_stream_consumers() and agent._should_start_quiet_spinner():\n'
     )
     if marker in text and "HERMES_ISH_MODE" not in text:
-        conversation_loop.write_text(text.replace(marker, patch, 1), encoding="utf-8")
+        text = text.replace(marker, patch, 1)
+
+    marker = (
+        '                logger.warning(\n'
+        '                    "Retrying API call in %ss (attempt %s/%s) %s error=%s",\n'
+        '                    wait_time,\n'
+        '                    retry_count,\n'
+        '                    max_retries,\n'
+        '                    agent._client_log_context(),\n'
+        '                    api_error,\n'
+        '                )\n'
+    )
+    patch = (
+        marker
+        + '                if os.environ.get("HERMES_ISH_MODE") == "1":\n'
+        + '                    agent._buffer_status("iSH mode: skipping retry backoff after API connection failure.")\n'
+        + '                    retry_count = max_retries\n'
+        + '                    continue\n'
+    )
+    if marker in text and "skipping retry backoff after API connection failure" not in text:
+        text = text.replace(marker, patch, 1)
+
+    conversation_loop.write_text(text, encoding="utf-8")
 
 if gateway_run.exists():
     text = gateway_run.read_text(encoding="utf-8")
