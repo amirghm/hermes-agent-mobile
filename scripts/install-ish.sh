@@ -62,6 +62,30 @@ trim_spaces() {
     printf "%s" "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
+looks_like_telegram_token() {
+    case "$1" in
+        *:* )
+            printf "%s" "$1" | grep -Eq '^[0-9]{6,}:[A-Za-z0-9_-]{20,}$'
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+validate_telegram_token_or_warn() {
+    VALUE="$1"
+    [ -z "$VALUE" ] && return 0
+
+    if looks_like_telegram_token "$VALUE"; then
+        return 0
+    fi
+
+    warn "That does not look like a Telegram bot token."
+    warn "Expected format: 123456789:AA..."
+    return 1
+}
+
 install_apk_packages() {
     if ! command -v apk >/dev/null 2>&1; then
         fail "apk not found. This installer requires iSH/Alpine Linux."
@@ -429,6 +453,11 @@ collect_quick_setup() {
         ask "Telegram bot token [optional on iSH]:" TELEGRAM_BOT_TOKEN
         TELEGRAM_BOT_TOKEN="$(trim_spaces "$TELEGRAM_BOT_TOKEN")"
     fi
+
+    while [ -n "$TELEGRAM_BOT_TOKEN" ] && ! validate_telegram_token_or_warn "$TELEGRAM_BOT_TOKEN"; do
+        ask "Telegram bot token [leave blank to skip gateway]:" TELEGRAM_INPUT
+        TELEGRAM_BOT_TOKEN="$(trim_spaces "$TELEGRAM_INPUT")"
+    done
 
     printf "\n"
     printf "  Choose an OpenRouter model.\n"
